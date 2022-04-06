@@ -7,9 +7,20 @@ security:
     providers:
         users_in_memory: { memory: null }
     firewalls:
+        login:
+            pattern: ^/api/users/*
+            stateless: true
+            json_login:
+                check_path: /api/users
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        api:
+            pattern: ^/api
+            stateless: true
+            jwt: ~
         main:
             lazy: true
             provider: users_in_memory
@@ -25,6 +36,14 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/user,                    roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/profiles/*/follow,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/articles/feed,           roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/articles,                roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/articles/*/,             roles: IS_AUTHENTICATED_FULLY, methods: [POST, PUT, DELETE] }
+        - { path: ^/api/articles/*/comments,     roles: IS_AUTHENTICATED_FULLY, methods: [POST] }
+        - { path: ^/api/articles/*/comments/*,   roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/articles/*/favorite,     roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:
