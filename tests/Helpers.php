@@ -12,6 +12,7 @@ class Helpers extends WebTestCase
         string $httpUri,
         ?string $expectedJson = null,
         array $options = [],
+        bool $isSuccessful = true,
         bool $isLoged = true,
         string $testUser = 'jake@jake.jake',
     ): void {
@@ -28,6 +29,7 @@ class Helpers extends WebTestCase
         }
 
         $client->xmlHttpRequest($httpMethod, $httpUri, $options);
-        if ($expectedJson){static::assertJsonStringEqualsJsonString($expectedJson,$client->getResponse()->getContent());}
+        if ($isSuccessful){static::assertResponseIsSuccessful();}
+        if ($expectedJson){static::assertJsonStringEqualsJsonString($expectedJson, $client->getResponse()->getContent());}
     }
 }
