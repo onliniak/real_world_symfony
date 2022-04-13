@@ -3,7 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Articles;
+use App\Repository\Exceptions\IsNullException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -54,7 +56,7 @@ class ArticlesRepository extends ServiceEntityRepository
             ->andWhere('a.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
     }
 
     public function listArticles(?string $tag, ?string $author, ?string $favorited, int $limit, int $offset)
@@ -75,13 +77,13 @@ class ArticlesRepository extends ServiceEntityRepository
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
      */
     public function createArticle(string $title, string $description, string $body,
                                   string $authorEmail, ?array $tagList): void
     {
         $date = new \DateTimeImmutable();
-        $kebabcase = '/^([a-z][a-z0-9]*)(-[a-z0-9]+)*$/';
-        $slug = preg_replace('/./', $kebabcase, $title);
+        $slug = strtolower(preg_replace('/ /', '-', $title));
 
         $article = new Articles();
         $article->setSlug($slug);
@@ -119,11 +121,44 @@ class ArticlesRepository extends ServiceEntityRepository
     /**
      * @throws OptimisticLockException
      * @throws ORMException
+     * @throws IsNullException
      */
-    public function deleteArticle(string $slug): void
+    public function deleteArticle(?string $slug): void
     {
-        $article = $this->findOneBy(['slug' => $slug]);
-        $this->remove($article);
+        try {
+            $article = $this->findOneBy(['slug' => $slug]);
+            $this->remove($article);
+        } catch (\Throwable) { // Throwable = Error or Exception
+            throw new isNullException('Article not found');
+        }
+    }
+
+    public function loadTestArticles()
+    {
+        $createdAt = (new \DateTimeImmutable())
+            ->setTimestamp(
+                mktime('03', '22','56.637', '02', '18', '2016')
+            );
+        $updatedAt = (new \DateTimeImmutable())
+            ->setTimestamp(
+                mktime('03', '48','35.824', '02', '18', '2016')
+            );
+        $article = new Articles();
+        $article->setSlug('/api/articles/how-to-train-your-dragonsss');
+        $article->setTitle('How to train your dragon');
+        $article->setDescription('Ever wonder how?');
+        $article->setBody('It takes a Jacobian');
+        $article->setTagList(['dragons', 'training']);
+        $article->setFavoritesCount(0);
+        $article->setAuthorID('jake@jake.jake');
+        $article->setCreatedAt($createdAt);
+        $article->setUpdatedAt($updatedAt);
+        $this->add($article);
+
+//        unset($article); // clear/reset variable
+//        $article = new Articles();
+//        $article->setAuthorID();
+//        $this->add($article);
     }
 
     // /**
