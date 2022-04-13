@@ -104,6 +104,20 @@ class ArticlesControllerTest extends WebTestCase
         static::assertResponseStatusCodeSame(422);
     }
 
+    public function testShowNotFound()
+    {
+        $h = new Helpers();
+        $h->jsonClient(
+            'GET',
+            '/api/articles/not-existent',
+            null,
+            [],
+            false,
+            false
+        );
+        static::assertResponseStatusCodeSame(422);
+    }
+
     public function testCreateWithoutTagList(): void
     {
         $h = new Helpers();

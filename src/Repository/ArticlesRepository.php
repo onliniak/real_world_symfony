@@ -144,7 +144,7 @@ class ArticlesRepository extends ServiceEntityRepository
                 mktime('03', '48','35.824', '02', '18', '2016')
             );
         $article = new Articles();
-        $article->setSlug('/api/articles/how-to-train-your-dragonsss');
+        $article->setSlug('how-to-train-your-dragonsss');
         $article->setTitle('How to train your dragon');
         $article->setDescription('Ever wonder how?');
         $article->setBody('It takes a Jacobian');

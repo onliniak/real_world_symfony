@@ -19,20 +19,50 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class ArticlesController extends AbstractController
 {
     #[Route('/api/articles', name: 'app_articles', methods: ['GET'])]
-    public function index(?string $tag, ?string $author, ?string $favorited, int $limit = 20, int $offset = 0): Response
+    public function index(Request $request, ArticlesRepository $article): Response
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ArticlesController.php',
-        ]);
+        $tag = $request->query->get('tag');
+        $author = $request->query->get('author');
+        $favorited = $request->query->get('favorited');
+        $limit = $request->query->get('tag') ?? 20;
+        $offset = $request->query->get('tag') ?? 0;
+
+        return $this->json($article->listArticles($tag, $author, $favorited, $limit, $offset));
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
-    public function show(string $slug): Response
+    public function show(string $slug, ArticlesRepository $article): Response
     {
+        if (is_null($article->getSingleArticle($slug))) {
+            return $this->json([
+                'errors' => [
+                    'body' => [
+                        'Article not found',
+                    ],
+                ],
+            ], 422);
+        }
+
+        $newArticle = $article->getSingleArticle($slug);
+
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ArticlesController.php',
+            'article' => [
+                'author' => [
+                    'bio' => '',
+                    'following' => '',
+                    'image' => '',
+                    'username' => '',
+                ],
+                'body' => $newArticle['body'],
+                'createdAt' => date_format($newArticle['createdAt'], 'Y-m-d\TH:i:s.v\Z'),
+                'description' => $newArticle['description'],
+                'favorited' => $newArticle['favorited'],
+                'favoritesCount' => $newArticle['favoritesCount'],
+                'slug' => $newArticle['slug'],
+                'tagList' => $newArticle['tagList'],
+                'title' => $newArticle['title'],
+                'updatedAt' => date_format($newArticle['updatedAt'], 'Y-m-d\TH:i:s.v\Z'),
+            ],
         ]);
     }
 
@@ -76,18 +106,20 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_update', methods: ['PUT'])]
-    public function update(string $slug, string $title, string $description, string $body): Response
+    public function update(Request $request, ArticlesRepository $article): Response
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ArticlesController.php',
-        ]);
+        $title = $request->request->get('title');
+        $slug = strtolower(preg_replace('/ /', '-', $title));
+        $description = $request->request->get('description');
+        $body = $request->request->get('body');
+        $article->updateArticle($title, $description, $body);
+
+        return $this->json($article->getSingleArticle($slug));
     }
 
     /**
      * @throws OptimisticLockException
      * @throws \Doctrine\ORM\ORMException
-     * @throws IsNullException
      */
     #[Route('/api/articles/{slug}', name: 'app_article_delete', methods: ['DELETE'])]
     public function delete(string $slug, ArticlesRepository $article): Response
@@ -104,9 +136,6 @@ class ArticlesController extends AbstractController
             ], 422);
         }
 
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ArticlesController.php',
-        ]);
+        return $this->json([]);
     }
 }
