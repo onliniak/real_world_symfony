@@ -7,7 +7,7 @@ use App\Repository\Exceptions\IsNullException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -131,34 +131,6 @@ class ArticlesRepository extends ServiceEntityRepository
         } catch (\Throwable) { // Throwable = Error or Exception
             throw new isNullException('Article not found');
         }
-    }
-
-    public function loadTestArticles()
-    {
-        $createdAt = (new \DateTimeImmutable())
-            ->setTimestamp(
-                mktime('03', '22','56.637', '02', '18', '2016')
-            );
-        $updatedAt = (new \DateTimeImmutable())
-            ->setTimestamp(
-                mktime('03', '48','35.824', '02', '18', '2016')
-            );
-        $article = new Articles();
-        $article->setSlug('how-to-train-your-dragonsss');
-        $article->setTitle('How to train your dragon');
-        $article->setDescription('Ever wonder how?');
-        $article->setBody('It takes a Jacobian');
-        $article->setTagList(['dragons', 'training']);
-        $article->setFavoritesCount(0);
-        $article->setAuthorID('jake@jake.jake');
-        $article->setCreatedAt($createdAt);
-        $article->setUpdatedAt($updatedAt);
-        $this->add($article);
-
-//        unset($article); // clear/reset variable
-//        $article = new Articles();
-//        $article->setAuthorID();
-//        $this->add($article);
     }
 
     // /**
