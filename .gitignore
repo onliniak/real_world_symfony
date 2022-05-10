@@ -32,10 +32,3 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
-
-###> my changes ###
-.env.test
-.env
-.env.*
-bin/symfony
-###< my changes ###
