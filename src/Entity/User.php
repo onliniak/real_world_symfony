@@ -104,9 +104,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function verifyPassword(string $password): bool
+    public function verifyPassword(string $currentPassword, string $hashedPassword): bool
     {
-        return password_verify($password, $this->password);
+        return password_verify($currentPassword, $hashedPassword);
     }
 
     /**

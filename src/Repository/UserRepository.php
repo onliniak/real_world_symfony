@@ -7,9 +7,9 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
@@ -29,7 +29,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * @throws ORMException
      * @throws OptimisticLockException
      */
     public function add(User $entity, bool $flush = true): void
@@ -41,7 +40,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * @throws ORMException
      * @throws OptimisticLockException
      */
     public function remove(User $entity, bool $flush = true): void
@@ -66,7 +64,12 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->flush();
     }
 
-    public function register(string $email, string $username, string $password): User
+    public function register(User $user): void
+    {
+        $this->add($user);
+    }
+
+    public function serialize(string $email, string $username, string $password): User
     {
         $user = new User();
         $user->setEmail($email);
@@ -74,23 +77,61 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setUsername($username);
         $user->setRoles(['ROLE_USER']);
 
+        return $user;
+    }
+
+    public function getUserByUsername(string $username): User
+    {
+        return $this->createQueryBuilder('u')
+            // ->select(['u.email', 'u.username', 'u.bio', 'u.image'])
+            ->select()
+            ->where('u.username = :userID')
+            ->setParameter('userID', $username)
+            ->getQuery()
+            ->getResult()[0];
+    }
+
+    public function getUserByLoginPassword(string $email, string $password): ?User
+    {
+        $user = $this->createQueryBuilder('u')
+            ->select()
+            ->where('u.email = :userEmail')
+            ->setParameter('userEmail', $email)
+            ->getQuery()
+            ->getResult()[0];
+
+        if ($user->verifyPassword($password, $user->getPassword())) {
+            return $user;
+        } else {
+            return null;
+        }
+    }
+
+    public function updateUser(Security $security, object $json): User
+    {
+        $user = $this->getUserByUsername($security->getUser()->getUserIdentifier());
+        if (isset($json->email)) {
+            $user->setEmail($json->email);
+        }
+        if (isset($json->username)) {
+            $user->setUsername($json->username);
+        }
+        if (isset($json->password)) {
+            $user->setPassword($json->password);
+        }
+        if (isset($json->image)) {
+            $user->setImage($json->image);
+        }
+        if (isset($json->bio)) {
+            $user->setBio($json->bio);
+        }
         $this->add($user);
         return $user;
     }
 
-    public function getUser(string $user): mixed
-    {
-        return $this->createQueryBuilder('u')
-            ->select(['u.email', 'u.username', 'u.bio', 'u.image'])
-            ->where('u.email = :userID')
-            ->setParameter('userID', $user)
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function getProfile(string $user)
-    {
-    }
+//    public function getProfile(string $user)
+//    {
+//    }
 
     // /**
     //  * @return User[] Returns an array of User objects

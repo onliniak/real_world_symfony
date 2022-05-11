@@ -5,54 +5,61 @@ declare(strict_types=1);
 namespace App\Controller\Users;
 
 use App\Repository\UserRepository;
+use App\Service\UserService;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Security;
 
 class UsersController extends AbstractController
 {
     #[Route('/api/users', name: 'app_user_create', methods: ['POST'])]
-    public function create(UserRepository $userRepository,
-                           Request $request, JWTTokenManagerInterface $JWTManager): JsonResponse
-    {
+    public function create(
+        UserService $userService,
+        JWTTokenManagerInterface $JWTToken,
+        Request $request,
+        UserRepository $userRepository
+    ): JsonResponse {
         $json = json_decode($request->getContent())->user;
-        $user = $userRepository->register(
-            $json->email,
-            $json->username,
-            $json->password
-        );
-        // $token = new UsernamePasswordToken($user, 'login', $user->getRoles());
-        // $tokenStorage->setToken($token);
-        // $requestStack->getSession()->set('_security_main', serialize($token));
 
-        return new JsonResponse([
-            'user' => [
-                'email' => $user->getEmail(),
-                'token' => $JWTManager->create($user),
-                'username' => $user->getUsername(),
-                'bio' => $user->getBio(),
-                'image' => $user->getImage(), ],
-             ]);
+        if (null == $userRepository->getUserByUsername($json->username)) {
+            $userRepository->register($userRepository->serialize(
+                $json->email,
+                $json->username,
+                $json->password
+            ));
+        }
+        return $this->json($userService->userResponse($userRepository->getUserByUsername($json->username), $JWTToken));
     }
 
     #[Route('/api/user', name: 'app_user_show', methods: ['GET'])]
-    public function show(): Response
-    {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/UsersController.php',
-        ]);
+    public function show(
+        UserRepository $userRepository,
+        UserService $userService,
+        JWTTokenManagerInterface $JWTToken,
+        Security $security
+    ): Response {
+        return $this->json($userService->userResponse(
+            $userRepository->getUserByUsername($security->getUser()->getUserIdentifier()),
+            $JWTToken
+        ));
     }
 
     #[Route('/api/user', name: 'app_user_update', methods: ['PUT'])]
-    public function update(): Response
+    public function update(UserRepository $userRepository,
+                           UserService $userService,
+                           Request $request,
+                           JWTTokenManagerInterface $JWTToken,
+                           Security $security): Response
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/UsersController.php',
-        ]);
+        return $this->json(
+            $userService->userResponse(
+                $userRepository->updateUser($security, json_decode($request->getContent())->user),
+                $JWTToken
+            )
+        );
     }
 }
