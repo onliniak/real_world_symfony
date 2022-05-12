@@ -38,6 +38,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $image;
 
+    #[ORM\Column(type: 'array', nullable: true)]
+    private $followedUsers = [];
+
     public function __construct()
     {
         $this->favouritedArticles = new ArrayCollection();
@@ -67,7 +70,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string)$this->username;
+        return (string) $this->username;
     }
 
     /**
@@ -181,6 +184,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->image = $image;
 
+        return $this;
+    }
+
+    public function getFollowedUsers(): ?array
+    {
+        return $this->followedUsers;
+    }
+
+    public function setFollowedUsers(?array $followedUsers): self
+    {
+        if (!in_array($followedUsers[0], $this->followedUsers)) {
+            $this->followedUsers = array_merge($this->followedUsers, $followedUsers);
+        }
+        return $this;
+    }
+
+    public function deleteFollowedUsers(?array $followedUsers): self
+    {
+        $this->followedUsers = array_values(array_diff($this->followedUsers, $followedUsers));
         return $this;
     }
 }
