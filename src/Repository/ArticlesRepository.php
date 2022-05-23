@@ -6,8 +6,8 @@ use App\Entity\Articles;
 use App\Repository\Exceptions\IsNullException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
-use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -53,19 +53,21 @@ class ArticlesRepository extends ServiceEntityRepository
     public function getSingleArticle(string $slug)
     {
         return $this->createQueryBuilder('a')
+            ->select(['a.slug', 'a.title', 'a.description', 'a.body', 'a.tagList',
+                'a.createdAt', 'a.updatedAt', 'a.favorited', 'a.favoritesCount', 'a.authorID', ])
             ->andWhere('a.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
             ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
     }
 
-    public function listArticles(?string $tag, ?string $author, ?string $favorited, int $limit, int $offset)
+    public function listArticles(int $limit, int $offset, string $tag, ?string $author, ?string $favorited): mixed
     {
         return $this->createQueryBuilder('a')
             ->andWhere('a.tag = :tag')
             ->andWhere('a.author = :author')
             ->andWhere('a.favorited = :favorited')
-            ->setParameter('tag', $tag ?? '*')
+            ->setParameter('tag', $tag)
             ->setParameter('author', $author ?? '*')
             ->setParameter('favorited', $favorited ?? '*')
             ->setMaxResults($limit)
@@ -91,7 +93,7 @@ class ArticlesRepository extends ServiceEntityRepository
         $article->setDescription($description);
         $article->setBody($body);
         if ($tagList) {
-            $article->setTagList($tagList);
+            $article->setTags($tagList);
         }
         $article->setCreatedAt($date);
         $article->setUpdatedAt($date);
@@ -131,6 +133,14 @@ class ArticlesRepository extends ServiceEntityRepository
         } catch (\Throwable) { // Throwable = Error or Exception
             throw new isNullException('Article not found');
         }
+    }
+
+    public function getTags(): array
+    {
+        return $this->createQueryBuilder('a')
+            ->select(['a.tags'])
+            ->getQuery()
+            ->getResult()[0]['tags'];
     }
 
     // /**
