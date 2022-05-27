@@ -14,12 +14,19 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\Security;
 
 class ArticlesController extends AbstractController
 {
+    private ArticlesRepository $article;
+
+    public function __construct(?ArticlesRepository $article)
+    {
+        $this->article = $article;
+    }
+
     #[Route('/api/articles', name: 'app_articles', methods: ['GET'])]
-    public function index(Request $request, ArticlesRepository $article): Response
+    public function index(Request $request): Response
     {
         $tag = $request->query->get('tag');
         $author = $request->query->get('author');
@@ -27,13 +34,13 @@ class ArticlesController extends AbstractController
         $limit = $request->query->get('tag') ?? 20;
         $offset = $request->query->get('tag') ?? 0;
 
-        return $this->json($article->listArticles($tag, $author, $favorited, $limit, $offset));
+        return $this->json($this->article->listArticles($limit, $offset, $tag, $author, $favorited));
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
-    public function show(string $slug, ArticlesRepository $article): Response
+    public function show(string $slug): Response
     {
-        if (is_null($article->getSingleArticle($slug))) {
+        if (is_null($this->article->getSingleArticle($slug))) {
             return $this->json([
                 'errors' => [
                     'body' => [
@@ -43,7 +50,7 @@ class ArticlesController extends AbstractController
             ], 422);
         }
 
-        $newArticle = $article->getSingleArticle($slug);
+        $newArticle = $this->article->getSingleArticle($slug);
 
         return $this->json([
             'article' => [
@@ -73,13 +80,13 @@ class ArticlesController extends AbstractController
      * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
      */
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]
-    public function create(Request $request, ArticlesRepository $article, UserInterface $user): Response
+    public function create(Request $request, ArticlesRepository $article, Security $security): Response
     {
         $title = $request->request->get('title');
         $slug = strtolower(preg_replace('/ /', '-', $title));
         $description = $request->request->get('description');
         $body = $request->request->get('body');
-        $authorEmail = $user->getUserIdentifier();
+        $authorEmail = $security->getUser(); // or UserInterface $user->getUserIdentifier(); ?
         $tagList = $request->request->all('tagList');
 
         try {
@@ -122,20 +129,8 @@ class ArticlesController extends AbstractController
      * @throws \Doctrine\ORM\ORMException
      */
     #[Route('/api/articles/{slug}', name: 'app_article_delete', methods: ['DELETE'])]
-    public function delete(string $slug, ArticlesRepository $article): Response
+    public function delete(string $slug): void
     {
-        try {
-            $article->deleteArticle($slug);
-        } catch (IsNullException $e) {
-            return $this->json([
-                'errors' => [
-                    'body' => [
-                        $e,
-                    ],
-                ],
-            ], 422);
-        }
-
-        return $this->json([]);
+        $this->article->deleteArticle($slug);
     }
 }

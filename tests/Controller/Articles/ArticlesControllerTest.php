@@ -2,16 +2,19 @@
 
 namespace App\Tests\Controller\Articles;
 
-use App\Repository\ArticlesRepository;
-use App\Tests\Helpers;
+use App\Tests\Helpers\HTTPclient;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class ArticlesControllerTest extends WebTestCase
 {
+    private function client(): HTTPclient
+    {
+        return new HTTPclient();
+    }
+
     public function testCreateUnauthenticated(): void
     {
-        $client = static::createClient();
-        $client->request('POST', '/api/articles');
+        $this->client()->sendRequest('POST', '/api/articles');
         static::assertResponseStatusCodeSame(401);
     }
 
@@ -38,6 +41,9 @@ class ArticlesControllerTest extends WebTestCase
 }', $httpParams);
         static::assertResponseIsSuccessful();
     }
+
+    //         if ($isSuccessful){static::assertResponseIsSuccessful();}
+    //        if ($expectedJson){static::assertJsonStringEqualsJsonString($expectedJson, $client->getResponse()->getContent());}
 
     public function testCreateExpectUniqueConstraintViolationException()
     {
@@ -82,8 +88,8 @@ class ArticlesControllerTest extends WebTestCase
             '{  "article": { "slug": "how-to-train-your-dragonsss",    "title": "How to train your dragon",
                 "description": "Ever wonder how?",    "body": "It takes a Jacobian", "tagList": ["dragons", "training"],
                     "createdAt": "2016-02-18T03:22:56.637Z",    "updatedAt": "2016-02-18T03:48:35.824Z",
-                        "favorited": false,    "favoritesCount": 0,    "author": {      "username": "jake",      
-                        "bio": "I work at statefarm",      "image": "https://i.stack.imgur.com/xHWG8.jpg",      
+                        "favorited": false,    "favoritesCount": 0,    "author": {      "username": "jake",
+                        "bio": "I work at statefarm",      "image": "https://i.stack.imgur.com/xHWG8.jpg",
                         "following": false    }  }}',
             [],
             false
@@ -104,20 +110,6 @@ class ArticlesControllerTest extends WebTestCase
         static::assertResponseStatusCodeSame(422);
     }
 
-    public function testShowNotFound()
-    {
-        $h = new Helpers();
-        $h->jsonClient(
-            'GET',
-            '/api/articles/not-existent',
-            null,
-            [],
-            false,
-            false
-        );
-        static::assertResponseStatusCodeSame(422);
-    }
-
     public function testCreateWithoutTagList(): void
     {
         $h = new Helpers();
@@ -133,8 +125,7 @@ class ArticlesControllerTest extends WebTestCase
 
     public function testUpdateUnauthenticated(): void
     {
-        $client = static::createClient();
-        $client->request('PUT', '/api/articles/how-to-train-your-dragon');
+        $this->client()->sendRequest('PUT', '/api/articles/how-to-train-your-dragon');
         static::assertResponseStatusCodeSame(401);
     }
 
@@ -152,16 +143,16 @@ class ArticlesControllerTest extends WebTestCase
     public function testIndex(): void
     {
         $h = new Helpers();
-        $h->jsonClient('GET', '/api/articles', '{  "articles":[{    
+        $h->jsonClient('GET', '/api/articles', '{  "articles":[{
         "slug": "how-to-train-your-dragonsss", "title": "How to train your dragon", "description": "Ever wonder how?",
             "body": "It takes a Jacobian", "tagList": ["dragons", "training"], "createdAt": "2016-02-18T03:22:56.637Z",
-                "updatedAt": "2016-02-18T03:48:35.824Z",    "favorited": false,    "favoritesCount": 0,    
-                "author": {      "username": "jake",      "bio": "I work at statefarm",      
+                "updatedAt": "2016-02-18T03:48:35.824Z",    "favorited": false,    "favoritesCount": 0,
+                "author": {      "username": "jake",      "bio": "I work at statefarm",
                 "image": "https://i.stack.imgur.com/xHWG8.jpg",      "following": false    }  },
-        {    "slug": "how-to-train-your-dragon",    "title": "Did you train your dragon?",    
-        "description": "Ever wonder how?",    "body": "You have to believe",    "tagList": [],    
-        "createdAt": "2016-02-18T03:22:56.637Z",    "updatedAt": "2016-02-18T03:48:35.824Z",    "favorited": false,    
-        "favoritesCount": 0,    "author": {      "username": "jake",      "bio": "I work at statefarm",      
+        {    "slug": "how-to-train-your-dragon",    "title": "Did you train your dragon?",
+        "description": "Ever wonder how?",    "body": "You have to believe",    "tagList": [],
+        "createdAt": "2016-02-18T03:22:56.637Z",    "updatedAt": "2016-02-18T03:48:35.824Z",    "favorited": false,
+        "favoritesCount": 0,    "author": {      "username": "jake",      "bio": "I work at statefarm",
         "image": "https://i.stack.imgur.com/xHWG8.jpg",      "following": false    }  }],  "articlesCount": 2}');
 //        $this->expectException('PHPUnit\Framework\ExpectationFailedException');
         static::assertResponseIsSuccessful();
