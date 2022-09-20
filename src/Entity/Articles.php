@@ -37,7 +37,7 @@ class Articles
     private $authorID;
 
     #[ORM\OneToMany(mappedBy: 'article_id', targetEntity: FavouritedArticles::class, orphanRemoval: true)]
-    private $favourited;
+    private $favorited;
 
     #[ORM\Column(type: 'integer')]
     private $favoritesCount;
