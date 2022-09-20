@@ -32,7 +32,7 @@ class UsersController extends AbstractController
                 $json->password
             ));
         }
-        return $this->json($userService->userResponse($userRepository->getUserByUsername($json->username)[0], $JWTToken));
+        return $this->json($userService->userResponse($userRepository->getUserByUsername($json->username), $JWTToken));
     }
 
     #[Route('/api/user', name: 'app_user_show', methods: ['GET'])]
@@ -43,7 +43,7 @@ class UsersController extends AbstractController
         Security                 $security
     ): Response {
         return $this->json($userService->userResponse(
-            $userRepository->getUserByUsername($security->getUser()->getUserIdentifier())[0],
+            $userRepository->getUserByUsername($security->getUser()->getUserIdentifier()),
             $JWTToken
         ));
     }
