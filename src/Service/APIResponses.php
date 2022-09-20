@@ -3,11 +3,12 @@
 namespace App\Service;
 
 use App\Entity\User;
-use App\Repository\ArticlesRepository;
 use App\Repository\UserRepository;
+use DateTimeInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\Security;
 
+// ToDo: Remove unnecessary dependencies such us entities.
 class APIResponses
 {
     public function userResponse(User $user, JWTTokenManagerInterface $JWTManager): array
@@ -39,19 +40,19 @@ class APIResponses
         ];
     }
 
-    public function articleResponse(
-        string $slug,
-        UserRepository $userRepository,
-        ArticlesRepository $articlesRepository,
-        Security $security
-    ): array {
+    public function articleResponse(array $array, string $currentUser): array
+    {
+        $article = array_slice($array, 0, 8);
+        $following = in_array($currentUser, $array);
+        $user = array_slice($array, -3);
+        $user['following'] = $following;
+        $article['tagList'] = $array['tags'];
+        unset($article['tags']);
+        $article['createdAt'] = $article['createdAt']->format(DateTimeInterface::ATOM);
+        $article['author'] = $user;
+
         return [
-            'article' => $articlesRepository->getSingleArticle($slug),
-            'author' => $this->profileResponse(
-                $articlesRepository->getSingleArticle($slug)->authorID,
-                $userRepository,
-                $security
-            ),
+            'article' => $article,
         ];
     }
 }

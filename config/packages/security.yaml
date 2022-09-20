@@ -47,10 +47,11 @@ security:
     # - { path: ^/profile, roles: ROLE_USER }
     - { path: ^/api/users,                   roles: PUBLIC_ACCESS, methods: [ POST ] }
     - { path: ^/api/users/login_check,       roles: PUBLIC_ACCESS, methods: [ POST ] }
+    - { path: ^/api/tags,                    roles: PUBLIC_ACCESS }
     - { path: ^/api/user,                    roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/profiles/*/follow,       roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/articles/feed,           roles: IS_AUTHENTICATED_FULLY }
-    - { path: ^/api/articles/,               roles: IS_AUTHENTICATED_FULLY, methods: [ POST, PUT, DELETE ] }
+    - { path: ^/api/articles/,               roles: IS_AUTHENTICATED_REMEMBERED, methods: [ POST, PUT, DELETE ] }
     - { path: ^/api/articles/*/comments,     roles: IS_AUTHENTICATED_FULLY, methods: [ POST ] }
     - { path: ^/api/articles/*/comments/*,   roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/articles/*/favorite,     roles: IS_AUTHENTICATED_FULLY }

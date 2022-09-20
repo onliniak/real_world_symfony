@@ -38,6 +38,9 @@
     "doctrine/common": {
         "version": "3.2.2"
     },
+    "doctrine/data-fixtures": {
+        "version": "1.5.3"
+    },
     "doctrine/dbal": {
         "version": "3.3.5"
     },
@@ -56,6 +59,18 @@
             "config/packages/doctrine.yaml",
             "src/Entity/.gitignore",
             "src/Repository/.gitignore"
+        ]
+    },
+    "doctrine/doctrine-fixtures-bundle": {
+        "version": "3.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "3.0",
+            "ref": "1f5514cfa15b947298df4d771e694e578d4c204d"
+        },
+        "files": [
+            "src/DataFixtures/AppFixtures.php"
         ]
     },
     "doctrine/doctrine-migrations-bundle": {
@@ -289,6 +304,9 @@
             "phpcs.xml.dist"
         ]
     },
+    "stella-maris/clock": {
+        "version": "0.1.4"
+    },
     "symfony/browser-kit": {
         "version": "v6.0.3"
     },
@@ -489,17 +507,49 @@
     "symfony/translation-contracts": {
         "version": "v3.0.1"
     },
+    "symfony/twig-bridge": {
+        "version": "v6.0.8"
+    },
+    "symfony/twig-bundle": {
+        "version": "6.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "5.4",
+            "ref": "bb2178c57eee79e6be0b297aa96fc0c0def81387"
+        },
+        "files": [
+            "config/packages/twig.yaml",
+            "templates/base.html.twig"
+        ]
+    },
     "symfony/var-dumper": {
         "version": "v6.0.6"
     },
     "symfony/var-exporter": {
         "version": "v6.0.7"
     },
+    "symfony/web-profiler-bundle": {
+        "version": "6.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "5.3",
+            "ref": "24bbc3d84ef2f427f82104f766014e799eefcc3e"
+        },
+        "files": [
+            "config/packages/web_profiler.yaml",
+            "config/routes/web_profiler.yaml"
+        ]
+    },
     "symfony/yaml": {
         "version": "v6.0.3"
     },
     "theseer/tokenizer": {
         "version": "1.2.1"
+    },
+    "twig/twig": {
+        "version": "v3.3.10"
     },
     "vimeo/psalm": {
         "version": "4.22.0"

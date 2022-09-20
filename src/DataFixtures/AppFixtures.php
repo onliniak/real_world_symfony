@@ -27,7 +27,7 @@ class AppFixtures extends Fixture
         $article->setTitle('How to train your dragon');
         $article->setDescription('Ever wonder how?');
         $article->setBody('It takes a Jacobian');
-        $article->setTagList(['dragons', 'training']);
+        $article->setTags(['dragons', 'training']);
         $article->setFavoritesCount(0);
         $article->setAuthorID('jake@jake.jake');
         $article->setCreatedAt($createdAt);

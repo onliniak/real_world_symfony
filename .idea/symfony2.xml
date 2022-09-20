@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Symfony2PluginSettings">
+    <option name="pluginEnabled" value="true" />
+    <option name="profilerLocalEnabled" value="true" />
+    <option name="profilerLocalUrl" value="http://127.0.0.1:8000/api" />
+    <option name="profilerCsvPath" value="$PROJECT_DIR$/var/cache/dev/index.csv" />
+  </component>
+</project>

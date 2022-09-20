@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ArticlesRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ArticlesRepository::class)]
@@ -25,23 +27,28 @@ class Articles
     #[ORM\Column(type: 'string', length: 255)]
     private $body;
 
-    #[ORM\Column(type: 'simple_array', nullable: true)]
-    private $tagList = [];
-
     #[ORM\Column(type: 'datetime_immutable')]
     private $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private $updatedAt;
 
-    #[ORM\Column(type: 'simple_array', nullable: true)]
-    private $favorited = [];
+    #[ORM\Column(type: 'string')]
+    private $authorID;
+
+    #[ORM\OneToMany(mappedBy: 'article_id', targetEntity: FavouritedArticles::class, orphanRemoval: true)]
+    private $favourited;
 
     #[ORM\Column(type: 'integer')]
     private $favoritesCount;
 
-    #[ORM\Column(type: 'string')]
-    private $authorID;
+    #[ORM\Column(type: 'array', nullable: true)]
+    private $tagList = [];
+
+    public function __construct()
+    {
+        $this->favourited = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -53,9 +60,9 @@ class Articles
         return $this->slug;
     }
 
-    public function setSlug(string $slug): self
+    public function setSlug(?string $slug): self
     {
-        $this->slug = $slug;
+        $this->slug = $slug ?? strtolower(preg_replace('/ /', '-', $this->title));
 
         return $this;
     }
@@ -96,26 +103,14 @@ class Articles
         return $this;
     }
 
-    public function getTagList(): ?array
-    {
-        return $this->tagList;
-    }
-
-    public function setTagList(?array $tagList): self
-    {
-        $this->tagList = $tagList;
-
-        return $this;
-    }
-
     public function getCreatedAt(): ?\DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): self
     {
-        $this->createdAt = $createdAt;
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
 
         return $this;
     }
@@ -127,19 +122,49 @@ class Articles
 
     public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
     {
-        $this->updatedAt = $updatedAt;
+        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
 
         return $this;
     }
 
-    public function getFavorited(): ?array
+    public function getAuthorID(): ?string
     {
-        return $this->favorited;
+        return $this->authorID;
     }
 
-    public function setFavorited(?array $favorited): self
+    public function setAuthorID(string $authorID): self
     {
-        $this->favorited = $favorited;
+        $this->authorID = $authorID;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FavouritedArticles>
+     */
+    public function getFavourited(): Collection
+    {
+        return $this->favourited;
+    }
+
+    public function addFavourited(FavouritedArticles $favourited): self
+    {
+        if (!$this->favourited->contains($favourited)) {
+            $this->favourited[] = $favourited;
+            $favourited->setArticleId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavourited(FavouritedArticles $favourited): self
+    {
+        if ($this->favourited->removeElement($favourited)) {
+            // set the owning side to null (unless already changed)
+            if ($favourited->getArticleId() === $this) {
+                $favourited->setArticleId(null);
+            }
+        }
 
         return $this;
     }
@@ -156,14 +181,14 @@ class Articles
         return $this;
     }
 
-    public function getAuthorID(): ?string
+    public function getTags(): ?array
     {
-        return $this->authorID;
+        return $this->tagList;
     }
 
-    public function setAuthorID(string $authorID): self
+    public function setTags(?array $tagList): self
     {
-        $this->authorID = $authorID;
+        $this->tagList = $tagList;
 
         return $this;
     }

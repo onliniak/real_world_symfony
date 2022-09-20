@@ -28,9 +28,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         parent::__construct($registry, User::class);
     }
 
-    /**
-     * @throws OptimisticLockException
-     */
     public function add(User $entity, bool $flush = true): void
     {
         $this->_em->persist($entity);
@@ -39,9 +36,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
     }
 
-    /**
-     * @throws OptimisticLockException
-     */
     public function remove(User $entity, bool $flush = true): void
     {
         $this->_em->remove($entity);
@@ -80,7 +74,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user;
     }
 
-    public function getUserByUsername(string $username): User
+    public function getUserByUsername(string $username): array
     {
         return $this->createQueryBuilder('u')
             // ->select(['u.email', 'u.username', 'u.bio', 'u.image'])
@@ -88,7 +82,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->where('u.username = :userID')
             ->setParameter('userID', $username)
             ->getQuery()
-            ->getResult()[0];
+            ->getResult();
     }
 
     public function getUserByLoginPassword(string $email, string $password): ?User
@@ -126,6 +120,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             $user->setBio($json->bio);
         }
         $this->add($user);
+
         return $user;
     }
 

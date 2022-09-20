@@ -3,7 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Articles;
-use App\Repository\Exceptions\IsNullException;
+use App\Entity\User;
+use App\Service\APIResponses;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Exception\ORMException;
@@ -47,23 +48,32 @@ class ArticlesRepository extends ServiceEntityRepository
         }
     }
 
-    /**
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     */
-    public function getSingleArticle(string $slug)
+    public function getSingleArticle(string $slug, string $currentUser): ?array
     {
-        return $this->createQueryBuilder('a')
+        $response = new APIResponses();
+        $article = $this->createQueryBuilder('a')
             ->select(['a.slug', 'a.title', 'a.description', 'a.body', 'a.tagList',
-                'a.createdAt', 'a.updatedAt', 'a.favorited', 'a.favoritesCount', 'a.authorID', ])
+                'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
+                'u.username', 'u.bio', 'u.image', ])
+            ->join(User::class, 'u')
+            ->where('u.username = a.authorID')
             ->andWhere('a.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
             ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
+
+        if (is_null($article)) {
+            return null;
+        } else {
+            return $response->articleResponse($article, $currentUser);
+        }
     }
 
-    public function listArticles(int $limit, int $offset, string $tag, ?string $author, ?string $favorited): mixed
+    public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited): mixed
     {
         return $this->createQueryBuilder('a')
+            ->select(['a.slug', 'a.title', 'a.description', 'a.body', 'a.tagList',
+                'a.createdAt', 'a.updatedAt', 'a.favorited', 'a.favoritesCount', 'a.authorID', ])
             ->andWhere('a.tag = :tag')
             ->andWhere('a.author = :author')
             ->andWhere('a.favorited = :favorited')
@@ -82,7 +92,7 @@ class ArticlesRepository extends ServiceEntityRepository
      * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
      */
     public function createArticle(string $title, string $description, string $body,
-                                  string $authorEmail, ?array $tagList): void
+                                  string $authorEmail, ?array $tags): ?array
     {
         $date = new \DateTimeImmutable();
         $slug = strtolower(preg_replace('/ /', '-', $title));
@@ -92,14 +102,16 @@ class ArticlesRepository extends ServiceEntityRepository
         $article->setTitle($title);
         $article->setDescription($description);
         $article->setBody($body);
-        if ($tagList) {
-            $article->setTags($tagList);
+        if ($tags) {
+            $article->setTags($tags);
         }
         $article->setCreatedAt($date);
         $article->setUpdatedAt($date);
         $article->setFavoritesCount(0);
         $article->setAuthorID($authorEmail);
         $this->add($article);
+
+        return $this->getSingleArticle($slug, $authorEmail);
     }
 
     public function updateArticle(?string $title, ?string $description, ?string $body)
@@ -123,24 +135,21 @@ class ArticlesRepository extends ServiceEntityRepository
     /**
      * @throws OptimisticLockException
      * @throws ORMException
-     * @throws IsNullException
      */
     public function deleteArticle(?string $slug): void
     {
-        try {
-            $article = $this->findOneBy(['slug' => $slug]);
+        $article = $this->findOneBy(['slug' => $slug]);
+        if (!is_null($article)) {
             $this->remove($article);
-        } catch (\Throwable) { // Throwable = Error or Exception
-            throw new isNullException('Article not found');
         }
     }
 
     public function getTags(): array
     {
         return $this->createQueryBuilder('a')
-            ->select(['a.tags'])
+            ->select(['a.tagList'])
             ->getQuery()
-            ->getResult()[0]['tags'];
+            ->getResult()[0]['tagList'];
     }
 
     // /**

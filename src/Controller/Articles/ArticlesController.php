@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Articles;
 
 use App\Repository\ArticlesRepository;
-use App\Repository\Exceptions\IsNullException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Doctrine\ORM\Exception\ORMException;
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\ORM\OptimisticLockException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -73,43 +69,31 @@ class ArticlesController extends AbstractController
         ]);
     }
 
-    /**
-     * @throws \Doctrine\ORM\OptimisticLockException
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
-     */
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]
     public function create(Request $request, ArticlesRepository $article, Security $security): Response
     {
-        $title = $request->request->get('title');
-        $slug = strtolower(preg_replace('/ /', '-', $title));
-        $description = $request->request->get('description');
-        $body = $request->request->get('body');
-        $authorEmail = $security->getUser(); // or UserInterface $user->getUserIdentifier(); ?
-        $tagList = $request->request->all('tagList');
+        $json = json_decode($request->getContent(), true)['article'];
+        $authorEmail = $security->getUser()?->getUserIdentifier();
 
         try {
-            $article->createArticle($title, $description, $body, $authorEmail, $tagList);
-            $newArticle = $article->getSingleArticle($slug);
-        } catch (UniqueConstraintViolationException|OptimisticLockException|NonUniqueResultException|ORMException $e) {
+            return $this->json(
+                $article->createArticle(
+                    $json['title'],
+                    $json['description'],
+                    $json['body'],
+                    $authorEmail,
+                    $json['tagList']
+                ),
+            );
+        } catch (UniqueConstraintViolationException) {
             return $this->json([
                 'errors' => [
                     'body' => [
-                        $e,
+                        'Article already exists',
                     ],
                 ],
             ], 422);
         }
-
-        return $this->json([
-            'article' => [
-                'title' => $newArticle['title'],
-                'description' => $newArticle['description'],
-                'body' => $newArticle['body'],
-                'tagList' => $newArticle['tagList'],
-            ],
-        ]);
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_update', methods: ['PUT'])]
@@ -124,13 +108,11 @@ class ArticlesController extends AbstractController
         return $this->json($article->getSingleArticle($slug));
     }
 
-    /**
-     * @throws OptimisticLockException
-     * @throws \Doctrine\ORM\ORMException
-     */
     #[Route('/api/articles/{slug}', name: 'app_article_delete', methods: ['DELETE'])]
-    public function delete(string $slug): void
+    public function delete(string $slug): Response
     {
         $this->article->deleteArticle($slug);
+
+        return $this->json([]);
     }
 }

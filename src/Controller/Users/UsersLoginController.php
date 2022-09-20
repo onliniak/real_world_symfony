@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Users;
 
 use App\Repository\UserRepository;
-use App\Service\UserService;
+use App\Service\APIResponses;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,10 +16,10 @@ class UsersLoginController extends AbstractController
 {
     #[Route('/api/users/login', name: 'app_user_login', methods: ['POST'])]
     public function create(
-        UserService $user,
-        UserRepository $userRepository,
+        APIResponses             $user,
+        UserRepository           $userRepository,
         JWTTokenManagerInterface $JWTToken,
-        Request $request,
+        Request                  $request,
     ): Response {
         $json = json_decode($request->getContent())->user;
 
