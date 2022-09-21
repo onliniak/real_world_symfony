@@ -48,7 +48,7 @@ class ArticlesRepository extends ServiceEntityRepository
         }
     }
 
-    public function getSingleArticle(string $slug, string $currentUser): ?array
+    public function getSingleArticle(string $slug): ?array
     {
         $response = new APIResponses();
         $article = $this->createQueryBuilder('a')
@@ -65,7 +65,7 @@ class ArticlesRepository extends ServiceEntityRepository
         if (is_null($article)) {
             return null;
         } else {
-            return $response->articleResponse($article, $currentUser);
+            return $response->articleResponse($article, $article["username"]);
         }
     }
 
@@ -82,8 +82,7 @@ class ArticlesRepository extends ServiceEntityRepository
             ->setParameter('favorited', $favorited ?? '*')
             ->setMaxResults($limit)
             ->setFirstResult($offset)
-            ->getQuery()
-            ->getResult();
+            ->getQuery();
     }
 
     /**

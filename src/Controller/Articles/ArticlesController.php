@@ -46,27 +46,9 @@ class ArticlesController extends AbstractController
             ], 422);
         }
 
-        $newArticle = $this->article->getSingleArticle($slug);
-
-        return $this->json([
-            'article' => [
-                'author' => [
-                    'bio' => '',
-                    'following' => '',
-                    'image' => '',
-                    'username' => '',
-                ],
-                'body' => $newArticle['body'],
-                'createdAt' => date_format($newArticle['createdAt'], 'Y-m-d\TH:i:s.v\Z'),
-                'description' => $newArticle['description'],
-                'favorited' => $newArticle['favorited'],
-                'favoritesCount' => $newArticle['favoritesCount'],
-                'slug' => $newArticle['slug'],
-                'tagList' => $newArticle['tagList'],
-                'title' => $newArticle['title'],
-                'updatedAt' => date_format($newArticle['updatedAt'], 'Y-m-d\TH:i:s.v\Z'),
-            ],
-        ]);
+        return $this->json(
+            $this->article->getSingleArticle($slug)
+        );
     }
 
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]

@@ -46,9 +46,9 @@ class APIResponses
         $following = in_array($currentUser, $array);
         $user = array_slice($array, -3);
         $user['following'] = $following;
-        $article['tagList'] = $array['tags'];
+        $article['tagList'] = $array['tagList'];
         unset($article['tags']);
-        $article['createdAt'] = $article['createdAt']->format(DateTimeInterface::ATOM);
+        $article['createdAt'] = $article['createdAt']->format(DateTimeInterface::ATOM)."Z";
         $article['author'] = $user;
 
         return [
