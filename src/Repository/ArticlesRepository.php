@@ -10,6 +10,7 @@ use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @method Articles|null find($id, $lockMode = null, $lockVersion = null)
@@ -149,6 +150,17 @@ class ArticlesRepository extends ServiceEntityRepository
             ->select(['a.tagList'])
             ->getQuery()
             ->getResult()[0]['tagList'];
+    }
+
+    public function favorite(string $favorited, int $id)
+    {
+        return $this->createQueryBuilder('a')
+            ->update(['favorited', $favorited])
+            ->setParameter('id', $id)
+            ->where('a.id = :id')
+            ->getQuery()
+            ->getResult();
+        // tu będzie where in lub where like
     }
 
     // /**
