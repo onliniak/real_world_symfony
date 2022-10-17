@@ -26,9 +26,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string')]
     private $password;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: FavouritedArticles::class, orphanRemoval: true)]
-    private $favouritedArticles;
-
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     private $username;
 
@@ -40,11 +37,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'array', nullable: true)]
     private $followedUsers = [];
-
-    public function __construct()
-    {
-        $this->favouritedArticles = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -70,7 +62,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->username;
+        return (string)$this->username;
     }
 
     /**
@@ -121,36 +113,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    /**
-     * @return Collection<int, FavouritedArticles>
-     */
-    public function getFavouritedArticles(): Collection
-    {
-        return $this->favouritedArticles;
-    }
-
-    public function addFavouritedArticle(FavouritedArticles $favouritedArticle): self
-    {
-        if (!$this->favouritedArticles->contains($favouritedArticle)) {
-            $this->favouritedArticles[] = $favouritedArticle;
-            $favouritedArticle->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFavouritedArticle(FavouritedArticles $favouritedArticle): self
-    {
-        if ($this->favouritedArticles->removeElement($favouritedArticle)) {
-            // set the owning side to null (unless already changed)
-            if ($favouritedArticle->getUser() === $this) {
-                $favouritedArticle->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getUsername(): ?string
     {
         return $this->username;
@@ -187,22 +149,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getFollowedUsers(): ?array
-    {
-        return $this->followedUsers;
-    }
-
-    public function setFollowedUsers(?array $followedUsers): self
-    {
-        if (!in_array($followedUsers[0], $this->followedUsers)) {
-            $this->followedUsers = array_merge($this->followedUsers, $followedUsers);
-        }
-        return $this;
-    }
-
-    public function deleteFollowedUsers(?array $followedUsers): self
-    {
-        $this->followedUsers = array_values(array_diff($this->followedUsers, $followedUsers));
-        return $this;
-    }
 }

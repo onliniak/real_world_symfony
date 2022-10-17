@@ -6,6 +6,9 @@ use App\Repository\ArticlesRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: ArticlesRepository::class)]
 class Articles
@@ -36,7 +39,7 @@ class Articles
     #[ORM\Column(type: 'string')]
     private $authorID;
 
-    #[ORM\OneToMany(mappedBy: 'article_id', targetEntity: FavouritedArticles::class, orphanRemoval: true)]
+    #[ORM\Column(type: 'array')]
     private $favorited;
 
     #[ORM\Column(type: 'integer')]
@@ -44,11 +47,6 @@ class Articles
 
     #[ORM\Column(type: 'array', nullable: true)]
     private $tagList = [];
-
-    public function __construct()
-    {
-        $this->favourited = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -139,40 +137,40 @@ class Articles
         return $this;
     }
 
-    /**
-     * @return Collection<int, FavouritedArticles>
-     */
-    public function getFavourited(): Collection
-    {
-        return $this->favourited;
-    }
-
-    public function addFavourited(FavouritedArticles $favourited): self
-    {
-        if (!$this->favourited->contains($favourited)) {
-            $this->favourited[] = $favourited;
-            $favourited->setArticleId($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFavourited(FavouritedArticles $favourited): self
-    {
-        if ($this->favourited->removeElement($favourited)) {
-            // set the owning side to null (unless already changed)
-            if ($favourited->getArticleId() === $this) {
-                $favourited->setArticleId(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getFavoritesCount(): ?int
-    {
-        return $this->favoritesCount;
-    }
+//    /**
+//     * @return Collection<int, string>
+//     */
+//    public function getFavorited(): Collection
+//    {
+//        return $this->favorited;
+//    }
+//
+//    public function addFavorited(string $favorited): self
+//    {
+//        if (!$this->favorited->contains($favorited)) {
+//            $this->favorited[] = $favorited;
+//            $favorited->setArticleId($this);
+//        }
+//
+//        return $this;
+//    }
+//
+//    public function removeFavorited(string $favorited): self
+//    {
+//        if ($this->favorited->removeElement($favorited)) {
+//            // set the owning side to null (unless already changed)
+//            if ($favorited->getArticleId() === $this) {
+//                $favorited->setArticleId(null);
+//            }
+//        }
+//
+//        return $this;
+//    }
+//
+//    public function getFavoritesCount(): ?int
+//    {
+//        return $this->favoritesCount;
+//    }
 
     public function setFavoritesCount(int $favoritesCount): self
     {
