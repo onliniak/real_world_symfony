@@ -35,9 +35,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $image;
 
-    #[ORM\Column(type: 'array', nullable: true)]
-    private $followedUsers = [];
-
     public function getId(): ?int
     {
         return $this->id;
