@@ -11,16 +11,34 @@ ja zajmę się wszystkim, tylko nie tym, co trzeba.
 
 [Real World](https://github.com/gothinkster/realworld) backend demo + Symfony.
 
-- Coś tam słyszałem o programowaniu obiektowym i PHP7.
-- Coś tam słyszałem o testach.
-- Pracuję powoli i dokładnie.
-- Jestem samoukiem, co czyni ze mnie doskonałego junior full stack developera + 
-użytkownika Linuksa.
-
 ## Instalacja
-### Wygeneruj klucze.
-````
-openssl genrsa -out config/jwt/private.pem 4096
-openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem
-chmod -R 775 config/
-````
+### Zainstaluj Symfonię CLI
+https://symfony.com/download
+### Stwórz klucze JWT
+```
+php bin/console lexik:jwt:generate-keypair --skip-if-exists
+```
+### Usuń bazę danych, migracje i cache (na wszelki wypadek)
+```
+rm var/data.db
+rm -r var/cache
+rm -r migrations
+```
+### Stwórz plik migracji
+```
+mkdir migrations
+touch migrations/.gitignore
+php bin/console make:migration
+```
+### Migracja
+```
+php bin/console doctrine:migrations:migrate
+```
+### Start server
+```
+symfony server:start
+```
+Możesz też uruchomić skrypt:
+```
+chmod +x setup.sh && yes | ./setup.sh
+```
