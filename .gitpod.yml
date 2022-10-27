@@ -1,0 +1,6 @@
+tasks:
+  - name: Start server
+    init: chmod +x setup.sh && yes | ./setup.sh
+ports:
+  - port: 8000
+    visibility: public

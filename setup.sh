@@ -1,3 +1,9 @@
+# Zainstaluj symfonię CLI
+## Chwilowo tylko na Ubuntu
+if [  -n "$(uname -a | grep Ubuntu)" ]; then
+curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+sudo apt install symfony-cli
+fi
 # Stwórz klucze JWT
 php bin/console lexik:jwt:generate-keypair --skip-if-exists
 # Usuń bazę danych, migracje i cache (na wszelki wypadek)
