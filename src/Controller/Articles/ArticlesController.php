@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Controller\Articles;
 
 use App\Repository\ArticlesRepository;
+use App\Repository\FavoritedRepository;
+use App\Repository\TagsRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class ArticlesController extends AbstractController
 {
@@ -34,38 +36,50 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
-    public function show(string $slug): Response
+    public function show(string $slug, TagsRepository $tagsRepository, 
+    FavoritedRepository $favoritedRepository): Response
     {
-        if (is_null($this->article->getSingleArticle($slug))) {
+        if (empty($this->article->getSingleArticle($slug))) {
             return $this->json([
                 'errors' => [
                     'body' => [
                         'Article not found',
                     ],
                 ],
-            ], 422);
-        }
-
-        return $this->json(
-            $this->article->getSingleArticle($slug)
-        );
+            ], 404);
+        }           
+        return $this->json([
+            // GROUP_CONCAT in pure PHP
+            'article' => array_merge(
+                $this->article->getSingleArticle($slug),
+                $tagsRepository->getTagsFromSingleArticle($slug),
+            $favoritedRepository->getFavoritesFromSingleArticle($slug)
+                )
+        ]);
     }
 
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]
-    public function create(Request $request, ArticlesRepository $article, Security $security): Response
+    public function create(#[CurrentUser] ?UserInterface $user, Request $request,
+     ArticlesRepository $article, TagsRepository $tagsRepository): Response
     {
         $json = json_decode($request->getContent(), true)['article'];
-        $authorEmail = $security->getUser()?->getUserIdentifier();
+        $slug = strtolower(preg_replace('/ /', '-', $json['title']));
 
         try {
+            $article->createArticle(
+                $json['title'],
+                $json['description'],
+                $json['body'],
+                $user->getUserIdentifier()
+            );
+            if (!empty($json['tagList'])) {
+                foreach ($json['tagList'] as $tag) {
+                    $tagsRepository->addTag($tag, $slug);
+                }
+            }
+
             return $this->json(
-                $article->createArticle(
-                    $json['title'],
-                    $json['description'],
-                    $json['body'],
-                    $authorEmail,
-                    $json['tagList']
-                ),
+                $article->getSingleArticle($slug)
             );
         } catch (UniqueConstraintViolationException) {
             return $this->json([

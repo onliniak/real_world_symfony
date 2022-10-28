@@ -39,21 +39,35 @@ class FavoritedRepository extends ServiceEntityRepository
         }
     }
 
-    public function favorite(int $userID, int $articleID)
+    public function favorite(string $articleSlug, string $userID): void
     {
         $favorite = new Favorited();
-        $favorite->setArticleId($articleID);
+        $favorite->setArticleSlug($articleSlug);
         $favorite->setUserId($userID);
 
-        $this->add($favorite);
+        $this->add($favorite, true);
     }
 
-    public function unfavorite(int $userID, int $articleID)
+    public function unfavorite( string $articleSlug, string $userID): void
     {
-        return $this->createQueryBuilder('f')
-            ->delete()
-            ->where('f.user_id = :userID')
-            ->andWhere('f.article_id = :articleID');
+        $this->remove(
+            $this->getEntityManager()
+        ->getRepository(Favorited::class, 'f')
+        ->findOneBy(['article_slug' => $articleSlug, 
+                     'user_id'      => $userID]), true
+        );
+    }
+
+    public function getFavoritesFromSingleArticle(string $slug): array
+    {
+        $query = $this->createQueryBuilder('f')
+            ->select('f.user_id')
+            ->where('f.article_slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery()
+            ->getScalarResult();
+
+        return ['favorited' => array_column($query, 'user_id')];
     }
 
 //    /**

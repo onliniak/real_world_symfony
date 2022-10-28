@@ -3,14 +3,13 @@
 namespace App\Repository;
 
 use App\Entity\Articles;
+use App\Entity\Favorited;
+use App\Entity\Tags;
 use App\Entity\User;
-use App\Service\APIResponses;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @method Articles|null find($id, $lockMode = null, $lockVersion = null)
@@ -51,23 +50,26 @@ class ArticlesRepository extends ServiceEntityRepository
 
     public function getSingleArticle(string $slug): ?array
     {
-        $response = new APIResponses();
-        $article = $this->createQueryBuilder('a')
-            ->select(['a.slug', 'a.title', 'a.description', 'a.body', 'a.tagList',
-                'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
-                'u.username', 'u.bio', 'u.image', ])
-            ->join(User::class, 'u')
-            ->where('u.username = a.authorID')
-            ->andWhere('a.slug = :slug')
+        // $existsFavorited = $this->getEntityManager()
+        // ->getRepository(Favorited::class)
+        // ->findBy(array('article_slug' => $slug));
+        // $existsTag = $this->getEntityManager()
+        // ->getRepository(Tags::class)
+        // ->findBy(array('article_slug' => $slug));
+
+        return $this->createQueryBuilder('a')
+            ->select(['a.slug', 'a.title', 'a.description', 'a.body',
+            'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
+            #'t.tag', #'f.user_id',
+            'u.username', 'u.bio', 'u.image'])
+            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
+            #->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
+            #->join(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
+            ->where('a.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
-            ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
+            ->getOneOrNullResult();
 
-        if (is_null($article)) {
-            return null;
-        } else {
-            return $response->articleResponse($article, $article["username"]);
-        }
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited): mixed
@@ -92,26 +94,23 @@ class ArticlesRepository extends ServiceEntityRepository
      * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
      */
     public function createArticle(string $title, string $description, string $body,
-                                  string $authorEmail, ?array $tags): ?array
+                                  string $authorEmail): void
     {
         $date = new \DateTimeImmutable();
         $slug = strtolower(preg_replace('/ /', '-', $title));
 
         $article = new Articles();
+        $tagEntity = new Tags();
+
         $article->setSlug($slug);
         $article->setTitle($title);
         $article->setDescription($description);
         $article->setBody($body);
-        if ($tags) {
-            $article->setTags($tags);
-        }
         $article->setCreatedAt($date);
         $article->setUpdatedAt($date);
         $article->setFavoritesCount(0);
         $article->setAuthorID($authorEmail);
         $this->add($article);
-
-        return $this->getSingleArticle($slug, $authorEmail);
     }
 
     public function updateArticle(?string $title, ?string $description, ?string $body)
@@ -144,24 +143,24 @@ class ArticlesRepository extends ServiceEntityRepository
         }
     }
 
-    public function getTags(): array
-    {
-        return $this->createQueryBuilder('a')
-            ->select(['a.tagList'])
-            ->getQuery()
-            ->getResult()[0]['tagList'];
-    }
+    // public function getTags(): array
+    // {
+    //     return $this->createQueryBuilder('a')
+    //         ->select(['a.tagList'])
+    //         ->getQuery()
+    //         ->getResult()[0]['tagList'];
+    // }
 
-    public function favorite(string $favorited, int $id)
-    {
-        return $this->createQueryBuilder('a')
-            ->update(['favorited', $favorited])
-            ->setParameter('id', $id)
-            ->where('a.id = :id')
-            ->getQuery()
-            ->getResult();
-        // tu będzie where in lub where like
-    }
+    // public function favorite(string $favorited, int $id)
+    // {
+    //     return $this->createQueryBuilder('a')
+    //         ->update(['favorited', $favorited])
+    //         ->setParameter('id', $id)
+    //         ->where('a.id = :id')
+    //         ->getQuery()
+    //         ->getResult();
+    //     // tu będzie where in lub where like
+    // }
 
     // /**
     //  * @return ArticlesService[] Returns an array of Articles objects

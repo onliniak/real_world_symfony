@@ -13,10 +13,10 @@ class Favorited
     #[ORM\Column(type: 'integer')]
     private $id;
 
-    #[ORM\Column(type: 'integer')]
-    private $article_id;
+    #[ORM\Column(type: 'string')]
+    private $article_slug;
 
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: 'string')]
     private $user_id;
 
     public function getId(): ?int
@@ -24,24 +24,24 @@ class Favorited
         return $this->id;
     }
 
-    public function getArticleId(): ?int
+    public function getArticleSlug(): ?string
     {
-        return $this->article_id;
+        return $this->article_slug;
     }
 
-    public function setArticleId(int $article_id): self
+    public function setArticleSlug(string $article_slug): self
     {
-        $this->article_id = $article_id;
+        $this->article_slug = $article_slug;
 
         return $this;
     }
 
-    public function getUserId(): ?int
+    public function getUserId(): ?string
     {
         return $this->user_id;
     }
 
-    public function setUserId(int $user_id): self
+    public function setUserId(string $user_id): self
     {
         $this->user_id = $user_id;
 

@@ -16,8 +16,8 @@ class Tags
     #[ORM\Column(type: 'string', length: 255)]
     private $tag;
 
-    #[ORM\Column(type: 'integer')]
-    private $article_id;
+    #[ORM\Column(type: 'string')]
+    private $article_slug;
 
     public function getId(): ?int
     {
@@ -36,14 +36,14 @@ class Tags
         return $this;
     }
 
-    public function getArticleId(): ?int
+    public function getArticleSlug(): ?string
     {
-        return $this->article_id;
+        return $this->article_slug;
     }
 
-    public function setArticleId(int $article_id): self
+    public function setArticleSlug(string $article_slug): self
     {
-        $this->article_id = $article_id;
+        $this->article_slug = $article_slug;
 
         return $this;
     }
