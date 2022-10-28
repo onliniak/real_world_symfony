@@ -58,11 +58,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->flush();
     }
 
-    public function register(User $user): void
-    {
-        $this->add($user);
-    }
-
     public function serialize(string $email, string $username, string $password): User
     {
         $user = new User();

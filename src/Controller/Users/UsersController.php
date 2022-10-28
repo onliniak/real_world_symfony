@@ -18,21 +18,28 @@ class UsersController extends AbstractController
 {
     #[Route('/api/users', name: 'app_user_create', methods: ['POST'])]
     public function create(
-        APIResponses             $userService,
         JWTTokenManagerInterface $JWTToken,
         Request                  $request,
         UserRepository           $userRepository
     ): JsonResponse {
         $json = json_decode($request->getContent())->user;
 
-        if (null == $userRepository->getUserByUsername($json->username)) {
-            $userRepository->register($userRepository->serialize(
+        $new_user = $userRepository->serialize(
                 $json->email,
                 $json->username,
                 $json->password
-            ));
-        }
-        return $this->json($userService->userResponse($userRepository->getUserByUsername($json->username), $JWTToken));
+            );
+        $userRepository->add($new_user);
+
+        return $this->json([
+            'user' => [
+                'email' => $json->email,
+                'token' => $JWTToken->create($new_user),
+                'username' => $json->username,
+                'bio' => '',
+                'image' => '',
+            ],
+    ]);
     }
 
     #[Route('/api/user', name: 'app_user_show', methods: ['GET'])]
