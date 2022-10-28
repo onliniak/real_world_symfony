@@ -8,6 +8,7 @@
 /var/
 /vendor/
 migrations/
+node_modules/
 ###< symfony/framework-bundle ###
 
 ###> friendsofphp/php-cs-fixer ###

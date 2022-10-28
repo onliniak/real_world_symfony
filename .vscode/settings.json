@@ -1,3 +1,12 @@
 {
-    "php.suggest.basic": false
+    "php.suggest.basic": false,
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "var/data.db",
+            "name": "RealWorld"
+        }
+    ]
 }
