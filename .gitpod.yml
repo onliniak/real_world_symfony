@@ -1,6 +1,8 @@
 tasks:
-  - name: Start server
+  - name: Setup server
     init: chmod +x setup.sh && yes | ./setup.sh
+  - name: Start server
+    before: chmod +x start.sh && ./start.sh
 ports:
   - port: 8000
     visibility: public
