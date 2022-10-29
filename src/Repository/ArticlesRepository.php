@@ -79,20 +79,39 @@ class ArticlesRepository extends ServiceEntityRepository
             return $query;
     }
 
-    public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited): mixed
+    public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
     {
-        return $this->createQueryBuilder('a')
-            ->select(['a.slug', 'a.title', 'a.description', 'a.body', 'a.tagList',
-                'a.createdAt', 'a.updatedAt', 'a.favorited', 'a.favoritesCount', 'a.authorID', ])
-            ->andWhere('a.tag = :tag')
-            ->andWhere('a.author = :author')
-            ->andWhere('a.favorited = :favorited')
-            ->setParameter('tag', $tag)
-            ->setParameter('author', $author ?? '*')
-            ->setParameter('favorited', $favorited ?? '*')
+        $tagArray = [];
+        if (!empty($tag)) {
+            $tagArray = ['t.tag'];
+        }
+        $favoritedArray = [];
+        if (!empty($favorited)) {
+            $favoritedArray = ['f.user_id'];
+        }
+
+        $query = $this->createQueryBuilder('a')
+            ->select(['a.slug', 'a.title', 'a.description', 'a.body',
+            'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
+            ...$tagArray, ...$favoritedArray,
+            'u.username', 'u.bio', 'u.image'])
+            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID');
+            if (!empty($tag)) {
+                $query->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
+                ->andWhere('t.tag = :tag')->setParameter('tag', $tag);
+            }
+            if (!empty($author)) {
+                $query->andWhere('a.authorID = :author')->setParameter('author', $author);
+            }
+            if (!empty($favorited)) {
+                $query->join(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
+                ->andWhere('f.user_id = :favorited')->setParameter('favorited', $favorited);
+            }
+            return $query
             ->setMaxResults($limit)
             ->setFirstResult($offset)
-            ->getQuery();
+            ->getQuery()
+            ->getScalarResult();
     }
 
     /**
