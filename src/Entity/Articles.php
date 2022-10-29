@@ -54,7 +54,7 @@ class Articles
 
     public function setSlug(?string $slug): self
     {
-        $this->slug = $slug ?? strtolower(preg_replace('/ /', '-', $this->title));
+        $this->slug = $slug;
 
         return $this;
     }

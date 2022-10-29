@@ -50,26 +50,33 @@ class ArticlesRepository extends ServiceEntityRepository
 
     public function getSingleArticle(string $slug): ?array
     {
-        // $existsFavorited = $this->getEntityManager()
-        // ->getRepository(Favorited::class)
-        // ->findBy(array('article_slug' => $slug));
-        // $existsTag = $this->getEntityManager()
-        // ->getRepository(Tags::class)
-        // ->findBy(array('article_slug' => $slug));
-
-        return $this->createQueryBuilder('a')
+        $query = $this->createQueryBuilder('a')
             ->select(['a.slug', 'a.title', 'a.description', 'a.body',
             'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
-            #'t.tag', #'f.user_id',
             'u.username', 'u.bio', 'u.image'])
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
-            #->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
-            #->join(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
             ->where('a.slug = :slug')
             ->setParameter('slug', $slug)
             ->getQuery()
             ->getOneOrNullResult();
 
+            if (!empty($query)) {
+                // Move user table/query to user subarray
+                $user = ['author' => [
+                'username' => $query['username'],
+                'bio'      => $query['bio'],
+                'image'    => $query['image']
+                 ]];
+                // Convert date + time to ISO 8601
+                $query['createdAt'] = $query['createdAt']->format('Y-m-d\TH:i:s.v\Z');
+                $query['updatedAt'] = $query['updatedAt']->format('Y-m-d\TH:i:s.v\Z');
+                // Remove from array
+                unset($query['username'],
+                $query['bio'], $query['image']);
+
+                return array_merge($query, $user);
+            }
+            return $query;
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited): mixed
@@ -100,7 +107,6 @@ class ArticlesRepository extends ServiceEntityRepository
         $slug = strtolower(preg_replace('/ /', '-', $title));
 
         $article = new Articles();
-        $tagEntity = new Tags();
 
         $article->setSlug($slug);
         $article->setTitle($title);
