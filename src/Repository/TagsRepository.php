@@ -59,6 +59,16 @@ class TagsRepository extends ServiceEntityRepository
         return ['tagList' => array_column($query, 'tag')];
     }
 
+    public function getAllTags()
+    {
+        $query = $this->createQueryBuilder('t')
+            ->select('t.tag')
+            ->getQuery()
+            ->getScalarResult();
+
+        return ['tags' => array_column($query, 'tag')];
+    }
+
 //    /**
 //     * @return Tags[] Returns an array of Tags objects
 //     */
