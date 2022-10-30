@@ -47,6 +47,36 @@ class CommentsRepository extends ServiceEntityRepository
         }
     }
 
+    public function CreateComment(string $slug, string $author, string $body): void
+    {
+        $date = $date = new \DateTimeImmutable();
+
+        $comment = new Comments();
+        $comment->setArticleSlug($slug);
+        $comment->setAuthorId($author);
+        $comment->setBody($body);
+        $comment->setCreatedAt($date);
+        $comment->setUpdatedAt($date);
+        $this->add($comment, true);
+    }
+
+    /** @return array{author_id: string, body: string, 
+     * created_at: \DateTimeImmutable(), updated_at: \DateTimeImmutable(),
+     * author: {username: string, bio: string, image: string}} */
+    public function ShowComments($slug): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select(['c.authorId', 'c.body', 'c.createdAt', 'c.updatedAt'
+            // 'author' =>
+            // ['u.username', 'u.bio', 'u.image']
+            ])
+            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
+            ->where('a.slug = :slug')
+            ->setParameter('slug', $slug)
+            ->getQuery()
+            ->getScalarResult();
+    }
+
     // /**
     //  * @return Comments[] Returns an array of Comments objects
     //  */

@@ -25,6 +25,9 @@ class Comments
     #[ORM\Column(type: 'datetime_immutable')]
     private $updatedAt;
 
+    #[ORM\Column(length: 255)]
+    private ?string $article_slug = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -74,6 +77,18 @@ class Comments
     public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function getArticleSlug(): ?string
+    {
+        return $this->article_slug;
+    }
+
+    public function setArticleSlug(string $article_slug): self
+    {
+        $this->article_slug = $article_slug;
 
         return $this;
     }
