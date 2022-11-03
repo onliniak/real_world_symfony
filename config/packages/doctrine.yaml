@@ -1,6 +1,7 @@
 doctrine:
     dbal:
-        url: '%env(resolve:DATABASE_URL)%'
+        url: sqlite3:///%kernel.project_dir%/var/data.db #'%env(resolve:DATABASE_URL)%'
+        driver: sqlite3
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)

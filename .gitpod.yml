@@ -1,8 +1,7 @@
 tasks:
-  - name: Setup server
-    init: chmod +x setup.sh && yes | ./setup.sh
   - name: Start server
-    before: chmod +x start.sh && ./start.sh
+    before: sudo dpkg -i symfony-cli_5.4.17_amd64.deb
+    command: symfony server:start
 ports:
   - port: 8000
     visibility: public

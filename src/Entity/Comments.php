@@ -25,8 +25,8 @@ class Comments
     #[ORM\Column(type: 'datetime_immutable')]
     private $updatedAt;
 
-    #[ORM\Column(length: 255)]
-    private ?string $article_slug = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    private $article_slug;
 
     public function getId(): ?int
     {
@@ -81,7 +81,7 @@ class Comments
         return $this;
     }
 
-    public function getArticleSlug(): ?string
+    public function getArticleSlug(): string
     {
         return $this->article_slug;
     }

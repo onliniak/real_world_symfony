@@ -9,10 +9,12 @@ use App\Repository\FavoritedRepository;
 use App\Repository\TagsRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class ArticlesController extends AbstractController
 {
@@ -24,7 +26,7 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles', name: 'app_articles', methods: ['GET'])]
-    public function index(Request $request): Response
+    public function index(Request $request): JsonResponse
     {
         $tag = $request->query->get('tag');
         $author = $request->query->get('author');
@@ -50,7 +52,8 @@ class ArticlesController extends AbstractController
         }           
         return $this->json([
             // GROUP_CONCAT in pure PHP
-            'article' => array_merge(
+            'article' =>
+            array_merge(
                 $this->article->getSingleArticle($slug),
                 $tagsRepository->getTagsFromSingleArticle($slug),
             $favoritedRepository->getFavoritesFromSingleArticle($slug)
@@ -105,9 +108,9 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_delete', methods: ['DELETE'])]
-    public function delete(string $slug): Response
+    public function delete(string $slug, TagsRepository $tags): Response
     {
-        $this->article->deleteArticle($slug);
+        $this->article->deleteArticle($slug, $tags);
 
         return $this->json([]);
     }

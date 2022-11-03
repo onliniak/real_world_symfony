@@ -30,10 +30,10 @@ class Articles
     #[ORM\Column(type: 'string', length: 255)]
     private $body;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'string')]
     private $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'string')]
     private $updatedAt;
 
     #[ORM\Column(type: 'string')]
@@ -95,26 +95,26 @@ class Articles
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): string
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeImmutable $createdAt): self
+    public function setCreatedAt(string $createdAt): self
     {
-        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
+    public function getUpdatedAt(): string
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    public function setUpdatedAt(string $updatedAt): self
     {
-        $this->updatedAt = $updatedAt ?? new \DateTimeImmutable();
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }

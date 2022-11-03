@@ -59,6 +59,14 @@ class TagsRepository extends ServiceEntityRepository
         return ['tagList' => array_column($query, 'tag')];
     }
 
+    public function deleteTagsFromSingleArticle(string $slug)
+    {
+        foreach ($this->findBy(['article_slug' => $slug]) as $tag)
+        {
+            $this->remove($tag);
+        }
+    }
+
     public function getAllTags()
     {
         $query = $this->createQueryBuilder('t')

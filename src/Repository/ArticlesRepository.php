@@ -53,65 +53,38 @@ class ArticlesRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('a')
             ->select(['a.slug', 'a.title', 'a.description', 'a.body',
             'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
-            'u.username', 'u.bio', 'u.image'])
+            'partial u.{id,username,bio,image} AS author'])
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
             ->where('a.slug = :slug')
             ->setParameter('slug', $slug)
+            ->setMaxResults(1)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getArrayResult();
 
-            if (!empty($query)) {
-                // Move user table/query to user subarray
-                $user = ['author' => [
-                'username' => $query['username'],
-                'bio'      => $query['bio'],
-                'image'    => $query['image']
-                 ]];
-                // Convert date + time to ISO 8601
-                $query['createdAt'] = $query['createdAt']->format('Y-m-d\TH:i:s.v\Z');
-                $query['updatedAt'] = $query['updatedAt']->format('Y-m-d\TH:i:s.v\Z');
-                // Remove from array
-                unset($query['username'],
-                $query['bio'], $query['image']);
-
-                return array_merge($query, $user);
-            }
-            return $query;
+            return json_decode(json_encode($query), true)[0];
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
-    {
-        $tagArray = [];
-        if (!empty($tag)) {
-            $tagArray = ['t.tag'];
-        }
-        $favoritedArray = [];
-        if (!empty($favorited)) {
-            $favoritedArray = ['f.user_id'];
-        }
-
+    { // TRza dodać tagsCount i favoritesCount
         $query = $this->createQueryBuilder('a')
-            ->select(['a.slug', 'a.title', 'a.description', 'a.body',
-            'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
-            ...$tagArray, ...$favoritedArray,
-            'u.username', 'u.bio', 'u.image'])
-            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID');
-            if (!empty($tag)) {
-                $query->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
-                ->andWhere('t.tag = :tag')->setParameter('tag', $tag);
-            }
-            if (!empty($author)) {
-                $query->andWhere('a.authorID = :author')->setParameter('author', $author);
-            }
-            if (!empty($favorited)) {
-                $query->join(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
-                ->andWhere('f.user_id = :favorited')->setParameter('favorited', $favorited);
-            }
-            return $query
+            ->select(['partial a.{id, slug, title, description, 
+                body, createdAt, updatedAt, favoritesCount} AS articles',
+            'partial t.{id, tag} AS tags',
+            'partial u.{id,username,bio,image} AS author'])
+            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
+            ->leftJoin(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
+            #->setParameter('tag', $tag) #AND t.tag = :tag
+            // if (!empty($author)) {
+            //     $query->andWhere('a.authorID = :author')->setParameter('author', $author);
+            // }
+            // $query->leftJoin(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
+            // ->andWhere('f.user_id = :favorited')->setParameter('favorited', $favorited)
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()
-            ->getScalarResult();
+            ->getArrayResult();
+
+            return $query[3];
     }
 
     /**
@@ -131,8 +104,8 @@ class ArticlesRepository extends ServiceEntityRepository
         $article->setTitle($title);
         $article->setDescription($description);
         $article->setBody($body);
-        $article->setCreatedAt($date);
-        $article->setUpdatedAt($date);
+        $article->setCreatedAt($date->format('Y-m-d\TH:i:s.v\Z'));
+        $article->setUpdatedAt($date->format('Y-m-d\TH:i:s.v\Z'));
         $article->setFavoritesCount(0);
         $article->setAuthorID($authorEmail);
         $this->add($article);
@@ -160,11 +133,12 @@ class ArticlesRepository extends ServiceEntityRepository
      * @throws OptimisticLockException
      * @throws ORMException
      */
-    public function deleteArticle(?string $slug): void
+    public function deleteArticle(?string $slug, TagsRepository $tagsRepository): void
     {
         $article = $this->findOneBy(['slug' => $slug]);
         if (!is_null($article)) {
             $this->remove($article);
+            $tagsRepository->deleteTagsFromSingleArticle($slug);
         }
     }
 
