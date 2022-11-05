@@ -51,9 +51,11 @@ class ArticlesRepository extends ServiceEntityRepository
     public function getSingleArticle(string $slug): ?array
     {
         $query = $this->createQueryBuilder('a')
-            ->select(['a.slug', 'a.title', 'a.description', 'a.body',
-            'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
-            'partial u.{id,username,bio,image} AS author'])
+            ->select([
+                'a.slug', 'a.title', 'a.description', 'a.body',
+                'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
+                'partial u.{id,username,bio,image} AS author'
+            ])
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
             ->where('a.slug = :slug')
             ->setParameter('slug', $slug)
@@ -61,15 +63,17 @@ class ArticlesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-            return json_decode(json_encode($query), true)[0];
+        return json_decode(json_encode($query), true)[0];
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
     {
         $query = $this->createQueryBuilder('a')
-            ->select(['a.slug, a.title, a.description, 
+            ->select([
+                'a.slug, a.title, a.description, 
             a.body, a.createdAt, a.updatedAt, a.favoritesCount',
-            'partial u.{id,username,bio,image} AS author'])
+                'partial u.{id,username,bio,image} AS author'
+            ])
             ->addSelect('CASE WHEN EXISTS (
                 SELECT f.id FROM App\Entity\Favorited f 
                 WHERE f.user_id = :favorited AND f.article_slug = a.slug)
@@ -81,12 +85,17 @@ class ArticlesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-            // var_dump($this
-            //             ->_em
-            //             ->getRepository('App\Entity\Tags')
-            //             ->getTagsFromSingleArticle('how-to-train-your-dragon')
-            //         ); // array merge
-            return $query;
+        $articlesArray = [];
+        foreach ($query as $article) {
+            $articlesArray[] = [
+                $article,
+                'tagList' =>
+                $this->_em
+                    ->getRepository('App\Entity\Tags')
+                    ->getTagsFromSingleArticle($article['slug'])
+            ];
+        }
+        return ['articles' => $articlesArray];
     }
 
     /**
@@ -94,9 +103,12 @@ class ArticlesRepository extends ServiceEntityRepository
      * @throws ORMException
      * @throws \Doctrine\DBAL\Exception\UniqueConstraintViolationException
      */
-    public function createArticle(string $title, string $description, string $body,
-                                  string $authorEmail): void
-    {
+    public function createArticle(
+        string $title,
+        string $description,
+        string $body,
+        string $authorEmail
+    ): void {
         $date = new \DateTimeImmutable();
         $slug = strtolower(preg_replace('/ /', '-', $title));
 
@@ -119,7 +131,7 @@ class ArticlesRepository extends ServiceEntityRepository
             ->update('a');
         if ($title) {
             $query->set('a.title', $title)
-                  ->set('a.slug', $title);
+                ->set('a.slug', $title);
         }
         if ($description) {
             $query->set('a.description', $description);
