@@ -30,7 +30,7 @@ class ArticlesController extends AbstractController
     {
         $tag = $request->query->get('tag');
         $author = $request->query->get('author');
-        $favorited = $request->query->get('favorited');
+        $favorited = $request->query->get('favorited') ?? '';
         $limit = $request->query->get('limit') ?? 20;
         $offset = $request->query->get('offset') ?? 0;
 

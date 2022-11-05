@@ -69,6 +69,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user;
     }
 
+    // @deprecated
     public function getUserByUsername(string $username): User
     {
         return $this->createQueryBuilder('u')

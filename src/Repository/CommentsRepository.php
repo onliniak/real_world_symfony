@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Comments;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
@@ -63,18 +64,18 @@ class CommentsRepository extends ServiceEntityRepository
     /** @return array{author_id: string, body: string, 
      * created_at: \DateTimeImmutable(), updated_at: \DateTimeImmutable(),
      * author: {username: string, bio: string, image: string}} */
-    public function ShowComments($slug): array
+    public function ShowComments(string $slug): array
     {
         return $this->createQueryBuilder('c')
-            ->select(['c.authorId', 'c.body', 'c.createdAt', 'c.updatedAt'
-            // 'author' =>
-            // ['u.username', 'u.bio', 'u.image']
-            ])
-            ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
-            ->where('a.slug = :slug')
+            ->select(['c.id', 'c.body', 'c.createdAt', 'c.updatedAt',
+            'partial u.{id,username,bio,image} AS author'])
+            ->join(User::class, 'u', 'WITH', 'u.username = c.author_id')
+            ->where('c.article_slug = :slug')
+            ->andWhere('c.id = 1')
             ->setParameter('slug', $slug)
+            // ->setParameter('id', $id)
             ->getQuery()
-            ->getScalarResult();
+            ->getArrayResult();
     }
 
     // /**

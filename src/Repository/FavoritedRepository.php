@@ -58,6 +58,7 @@ class FavoritedRepository extends ServiceEntityRepository
         );
     }
 
+    // @deprecated
     public function getFavoritesFromSingleArticle(string $slug): array
     {
         $query = $this->createQueryBuilder('f')

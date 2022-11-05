@@ -65,26 +65,28 @@ class ArticlesRepository extends ServiceEntityRepository
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
-    { // TRza dodać tagsCount i favoritesCount
+    {
         $query = $this->createQueryBuilder('a')
-            ->select(['partial a.{id, slug, title, description, 
-                body, createdAt, updatedAt, favoritesCount} AS articles',
-            'partial t.{id, tag} AS tags',
+            ->select(['a.slug, a.title, a.description, 
+            a.body, a.createdAt, a.updatedAt, a.favoritesCount',
             'partial u.{id,username,bio,image} AS author'])
+            ->addSelect('CASE WHEN EXISTS (
+                SELECT f.id FROM App\Entity\Favorited f 
+                WHERE f.user_id = :favorited AND f.article_slug = a.slug)
+                THEN true ELSE false END AS favorited')
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
-            ->leftJoin(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
-            #->setParameter('tag', $tag) #AND t.tag = :tag
-            // if (!empty($author)) {
-            //     $query->andWhere('a.authorID = :author')->setParameter('author', $author);
-            // }
-            // $query->leftJoin(Favorited::class, 'f', 'WITH', 'f.article_slug = a.slug')
-            // ->andWhere('f.user_id = :favorited')->setParameter('favorited', $favorited)
+            ->setParameter('favorited', $favorited)
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->getQuery()
             ->getArrayResult();
 
-            return $query[3];
+            // var_dump($this
+            //             ->_em
+            //             ->getRepository('App\Entity\Tags')
+            //             ->getTagsFromSingleArticle('how-to-train-your-dragon')
+            //         ); // array merge
+            return $query;
     }
 
     /**
