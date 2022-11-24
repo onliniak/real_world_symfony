@@ -1,7 +1,3 @@
-tasks:
-  - name: Start server
-    before: sudo dpkg -i symfony-cli_5.4.17_amd64.deb
-    command: symfony server:start
 ports:
   - port: 8000
     visibility: public
