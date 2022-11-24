@@ -48,7 +48,7 @@ class ArticlesRepository extends ServiceEntityRepository
         }
     }
 
-    public function getSingleArticle(string $slug): ?array
+    public function getSingleArticle(string $slug)
     {
         $query = $this->createQueryBuilder('a')
             ->select([
@@ -56,6 +56,10 @@ class ArticlesRepository extends ServiceEntityRepository
                 'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
                 'partial u.{id,username,bio,image} AS author'
             ])
+            ->addSelect('CASE WHEN EXISTS (
+                SELECT f.id FROM App\Entity\Favorited f 
+                WHERE f.user_id = u.id AND f.article_slug = a.slug)
+                THEN true ELSE false END AS favorited')
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
             ->where('a.slug = :slug')
             ->setParameter('slug', $slug)
@@ -63,7 +67,10 @@ class ArticlesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        return json_decode(json_encode($query), true)[0];
+        return '{"article": ' . json_encode(array_merge($query[0], ['tagList' =>
+        $this->_em
+            ->getRepository('App\Entity\Tags')
+            ->getTagsFromSingleArticle($query[0]['slug'])])) . '}';
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
@@ -88,6 +95,7 @@ class ArticlesRepository extends ServiceEntityRepository
         $articlesCount = 0;
         $articlesArray = '{"articles":[';
         foreach ($query as $article) {
+            // GROUP_CONCAT in pure PHP
             $articlesArray .= json_encode(array_merge($article, ['tagList' =>
             $this->_em
                 ->getRepository('App\Entity\Tags')

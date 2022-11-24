@@ -38,8 +38,7 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
-    public function show(string $slug, TagsRepository $tagsRepository, 
-    FavoritedRepository $favoritedRepository): Response
+    public function show(string $slug): Response
     {
         if (empty($this->article->getSingleArticle($slug))) {
             return $this->json([
@@ -50,15 +49,7 @@ class ArticlesController extends AbstractController
                 ],
             ], 404);
         }           
-        return $this->json([
-            // GROUP_CONCAT in pure PHP
-            'article' =>
-            array_merge(
-                $this->article->getSingleArticle($slug),
-                $tagsRepository->getTagsFromSingleArticle($slug),
-            $favoritedRepository->getFavoritesFromSingleArticle($slug)
-                )
-        ]);
+        return new Response($this->article->getSingleArticle($slug));
     }
 
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]
