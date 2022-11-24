@@ -12,33 +12,13 @@ ja zajmę się wszystkim, tylko nie tym, co trzeba.
 [Real World](https://github.com/gothinkster/realworld) backend demo + Symfony.
 
 ## Instalacja
-### Zainstaluj Symfonię CLI
-https://symfony.com/download
-### Stwórz klucze JWT
-```
-php bin/console lexik:jwt:generate-keypair --skip-if-exists
-```
-### Usuń bazę danych, migracje i cache (na wszelki wypadek)
-```
-rm var/data.db
-rm -r var/cache
-rm -r migrations
-```
-### Stwórz plik migracji
-```
-mkdir migrations
-touch migrations/.gitignore
-php bin/console make:migration
-```
-### Migracja
-```
-php bin/console doctrine:migrations:migrate
-```
-### Start server
-```
-symfony server:start
-```
-Możesz też uruchomić skrypt:
+### Za pierwszym razem
+Resetuje wszystkie dane
 ```
 chmod +x setup.sh && yes | ./setup.sh
+```
+### Za kolejnym
+Po prostu uruchamia serwer
+```
+chmod +x start.sh && ./start.sh
 ```
