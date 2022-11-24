@@ -86,11 +86,21 @@ class ArticlesRepository extends ServiceEntityRepository
                 WHERE f.user_id = :favorited AND f.article_slug = a.slug)
                 THEN true ELSE false END AS favorited')
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
-            ->setParameter('favorited', $favorited)
-            ->setMaxResults($limit)
-            ->setFirstResult($offset)
-            ->getQuery()
-            ->getArrayResult();
+            ->setParameter('favorited', $favorited);
+            if (!empty($tag)) {
+                $query = $query->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
+                ->andWhere('t.tag = :tag')
+                ->setParameter('tag', $tag);
+            }
+            if (!empty($author)) {
+                $query = $query
+                ->andWhere('u.username = :author')
+                ->setParameter('author', $author);
+            }
+        $query = $query->setMaxResults($limit)
+        ->setFirstResult($offset)
+        ->getQuery()
+        ->getArrayResult();
 
         $articlesCount = 0;
         $articlesArray = '{"articles":[';
