@@ -85,17 +85,22 @@ class ArticlesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        $articlesArray = [];
+        $articlesCount = 0;
+        $articlesArray = '{"articles":[';
         foreach ($query as $article) {
-            $articlesArray[] = [
-                $article,
-                'tagList' =>
-                $this->_em
-                    ->getRepository('App\Entity\Tags')
-                    ->getTagsFromSingleArticle($article['slug'])
-            ];
+            $articlesArray .= json_encode(array_merge($article, ['tagList' =>
+            $this->_em
+                ->getRepository('App\Entity\Tags')
+                ->getTagsFromSingleArticle($article['slug'])]));
+            $articlesCount += 1;
+            if ($articlesCount > 1) {
+                $articlesArray .= ',';
+            }
         }
-        return ['articles' => $articlesArray];
+        $articlesArray .= '], "articlesCount":';
+        $articlesArray .= $articlesCount;
+        $articlesArray .= '}';
+        return $articlesArray;
     }
 
     /**

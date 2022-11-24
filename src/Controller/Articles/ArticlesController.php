@@ -26,7 +26,7 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles', name: 'app_articles', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): Response
     {
         $tag = $request->query->get('tag');
         $author = $request->query->get('author');
@@ -34,7 +34,7 @@ class ArticlesController extends AbstractController
         $limit = $request->query->get('limit') ?? 20;
         $offset = $request->query->get('offset') ?? 0;
 
-        return $this->json($this->article->listArticles($limit, $offset, $tag, $author, $favorited));
+        return new Response($this->article->listArticles($limit, $offset, $tag, $author, $favorited));
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
