@@ -10,6 +10,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\Security;
 
 /**
  * @method Articles|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,9 +20,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ArticlesRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, ?Security $security)
     {
         parent::__construct($registry, Articles::class);
+        $this->security = $security->getUser()?->getUserIdentifier() ?? '';
     }
 
     /**
@@ -56,12 +58,19 @@ class ArticlesRepository extends ServiceEntityRepository
                 'a.createdAt', 'a.updatedAt', 'a.favoritesCount',
                 'partial u.{id,username,bio,image} AS author'
             ])
-            ->addSelect('CASE WHEN EXISTS (
-                SELECT f.id FROM App\Entity\Favorited f 
-                WHERE f.user_id = u.id AND f.article_slug = a.slug)
-                THEN true ELSE false END AS favorited')
+            ->addSelect('
+            (
+            CASE WHEN f.user_id = :authOR AND f.article_slug = a.slug
+            THEN :true
+            ELSE :false
+            END) AS favorited
+            ')
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
+            ->leftJoin(Favorited::class, 'f', 'WITH', 'f.user_id = u.username')
             ->where('a.slug = :slug')
+            ->setParameter('true', "true")
+            ->setParameter('false', "false")
+            ->setParameter('authOR', $this->security)
             ->setParameter('slug', $slug)
             ->setMaxResults(1)
             ->getQuery()
@@ -81,12 +90,17 @@ class ArticlesRepository extends ServiceEntityRepository
             a.body, a.createdAt, a.updatedAt, a.favoritesCount',
                 'partial u.{id,username,bio,image} AS author'
             ])
-            ->addSelect('CASE WHEN EXISTS (
-                SELECT f.id FROM App\Entity\Favorited f 
-                WHERE f.user_id = :favorited AND f.article_slug = a.slug)
-                THEN true ELSE false END AS favorited')
+            ->addSelect('
+            (
+            CASE WHEN f.user_id = u.username AND f.article_slug = a.slug
+            THEN :true
+            ELSE :false
+            END) AS favorited
+            ')
             ->join(User::class, 'u', 'WITH', 'u.username = a.authorID')
-            ->setParameter('favorited', $favorited);
+            ->leftJoin(Favorited::class, 'f', 'WITH', 'f.user_id = u.username')
+            ->setParameter('true', "true")
+            ->setParameter('false', "false");
             if (!empty($tag)) {
                 $query = $query->join(Tags::class, 't', 'WITH', 't.article_slug = a.slug')
                 ->andWhere('t.tag = :tag')
@@ -96,6 +110,11 @@ class ArticlesRepository extends ServiceEntityRepository
                 $query = $query
                 ->andWhere('u.username = :author')
                 ->setParameter('author', $author);
+            }
+            if (!empty($favorited)) {
+                $query = $query
+                ->andWhere('f.user_id = :favorited')
+                ->setParameter('favorited', $favorited);
             }
         $query = $query->setMaxResults($limit)
         ->setFirstResult($offset)
