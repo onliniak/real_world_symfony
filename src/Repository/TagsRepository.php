@@ -53,6 +53,7 @@ class TagsRepository extends ServiceEntityRepository
             ->select('t.tag')
             ->where('t.article_slug = :slug')
             ->setParameter('slug', $slug)
+            ->orderBy('t.tag', 'ASC')
             ->getQuery()
             ->getSingleColumnResult();
     }
