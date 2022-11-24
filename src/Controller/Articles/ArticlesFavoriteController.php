@@ -17,13 +17,13 @@ class ArticlesFavoriteController extends AbstractController
                            ArticlesRepository $articlesRepository): Response
     {
         $favoritedRepository->favorite($slug, $security->getUser()->getUserIdentifier());
-        return $this->json($articlesRepository->getSingleArticle($slug));
+        return new Response($articlesRepository->getSingleArticle($slug));
     }
     #[Route('/api/articles/{slug}/favorite', name: 'app_articles_unfavorite', methods: ['DELETE'])]
     public function delete(FavoritedRepository $favoritedRepository, Security $security, string $slug,
                            ArticlesRepository $articlesRepository): Response
     {
         $favoritedRepository->unfavorite($slug, $security->getUser()->getUserIdentifier());
-        return $this->json($articlesRepository->getSingleArticle($slug));
+        return new Response($articlesRepository->getSingleArticle($slug));
     }
 }
