@@ -35,7 +35,7 @@ class ArticlesController extends AbstractController
         return new Response($this->article->listArticles($limit, $offset, $tag, $author, $favorited));
     }
 
-    #[Route('/api/articles/{slug}', name: 'app_article_get', methods: ['GET'])]
+    #[Route('/api/articles/{slug}', name: 'app_article_get', requirements: ['slug' => '^(?!feed).+'], methods: ['GET'])]
     public function show(string $slug): Response
     {
         if (empty($this->article->getSingleArticle($slug))) {

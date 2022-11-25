@@ -120,7 +120,7 @@ class ArticlesRepository extends ServiceEntityRepository
             }
             if ($feed) {
                 $query = $query
-                ->join(Followers::class, 'fl', 'WITH', 'fl.user1 = :authOR AND fl.user2 = u.email')
+                ->join(Followers::class, 'fl', 'WITH', 'fl.user1 = :authOR AND fl.user2 = u.username')
                 ->setParameter('authOR', $this->security);
             }
         $query = $query->setMaxResults($limit)
