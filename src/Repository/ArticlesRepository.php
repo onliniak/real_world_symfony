@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Articles;
 use App\Entity\Favorited;
+use App\Entity\Followers;
 use App\Entity\Tags;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -82,7 +83,8 @@ class ArticlesRepository extends ServiceEntityRepository
             ->getTagsFromSingleArticle($query[0]['slug'])])) . '}';
     }
 
-    public function listArticles(int $limit, int $offset, ?string $tag, ?string $author, ?string $favorited)
+    public function listArticles(int $limit, int $offset, ?string $tag, 
+    ?string $author, ?string $favorited, ?bool $feed)
     {
         $query = $this->createQueryBuilder('a')
             ->select([
@@ -115,6 +117,11 @@ class ArticlesRepository extends ServiceEntityRepository
                 $query = $query
                 ->andWhere('f.user_id = :favorited')
                 ->setParameter('favorited', $favorited);
+            }
+            if ($feed) {
+                $query = $query
+                ->join(Followers::class, 'fl', 'WITH', 'fl.user1 = :authOR AND fl.user2 = u.email')
+                ->setParameter('authOR', $this->security);
             }
         $query = $query->setMaxResults($limit)
         ->setFirstResult($offset)
