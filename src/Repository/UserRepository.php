@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Followers;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
@@ -23,9 +24,10 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, ?Security $security)
     {
         parent::__construct($registry, User::class);
+        $this->security = $security->getUser()?->getUserIdentifier() ?? '';
     }
 
     public function add(User $entity, bool $flush = true): void
@@ -68,8 +70,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         return $user;
     }
-
-    // @deprecated
+    
     public function getUserByUsername(string $username): User
     {
         return $this->createQueryBuilder('u')
@@ -78,7 +79,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->where('u.username = :userID')
             ->setParameter('userID', $username)
             ->getQuery()
-            ->getResult()[0];
+            ->getSingleResult();
     }
 
     public function getUserByLoginPassword(string $email, string $password): ?User
@@ -88,7 +89,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->where('u.email = :userEmail')
             ->setParameter('userEmail', $email)
             ->getQuery()
-            ->getResult()[0];
+            ->getSingleResult();
 
         if ($user->verifyPassword($password, $user->getPassword())) {
             return $user;
@@ -120,9 +121,26 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user;
     }
 
-//    public function getProfile(string $user)
-//    {
-//    }
+    public function getProfile(string $user)
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.username, u.bio, u.image')
+            ->addSelect('
+            (
+            CASE WHEN f.user1 = :authOR AND f.user2 = u.username
+            THEN :true
+            ELSE :false
+            END) AS following
+            ')
+            ->leftJoin(Followers::class, 'f')
+            ->where('u.username = :user')
+            ->setParameter('user', $user)
+            ->setParameter('true', "true")
+            ->setParameter('false', "false")
+            ->setParameter('authOR', $this->security)
+            ->getQuery()
+            ->getSingleResult();
+    }
 
     // /**
     //  * @return User[] Returns an array of User objects
