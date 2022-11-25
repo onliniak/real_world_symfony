@@ -8,7 +8,7 @@ use DateTimeInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\Security;
 
-// ToDo: Remove unnecessary dependencies such us entities.
+// @deprecated
 class APIResponses
 {
     public function userResponse(User $user, JWTTokenManagerInterface $JWTManager): array
