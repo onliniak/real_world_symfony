@@ -137,9 +137,10 @@ class ArticlesRepository extends ServiceEntityRepository
                 ->getRepository('App\Entity\Tags')
                 ->getTagsFromSingleArticle($article['slug'])]));
             $articlesCount += 1;
-            if ($articlesCount > 1) {
                 $articlesArray .= ',';
-            }
+        }
+        if ($articlesCount > 1) {
+            $articlesArray = rtrim($articlesArray, ',');
         }
         $articlesArray .= '], "articlesCount":';
         $articlesArray .= $articlesCount;
