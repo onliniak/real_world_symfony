@@ -23,7 +23,7 @@ class ArticlesRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry, ?Security $security)
     {
         parent::__construct($registry, Articles::class);
-        $this->security = $security->getUser()?->getUserIdentifier() ?? '';
+        $this->security = $security->getUser()?->getUserIdentifier();
     }
 
     /**

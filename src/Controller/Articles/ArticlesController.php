@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace App\Controller\Articles;
 
 use App\Repository\ArticlesRepository;
-use App\Repository\FavoritedRepository;
 use App\Repository\TagsRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -54,13 +52,13 @@ class ArticlesController extends AbstractController
 
     #[Route('/api/articles', name: 'app_article_create', methods: ['POST'])]
     public function create(#[CurrentUser] ?UserInterface $user, Request $request,
-     ArticlesRepository $article, TagsRepository $tagsRepository): Response
+     TagsRepository $tagsRepository): Response
     {
         $json = json_decode($request->getContent(), true)['article'];
         $slug = strtolower(preg_replace('/ /', '-', $json['title']));
 
         try {
-            $article->createArticle(
+            $this->article->createArticle(
                 $json['title'],
                 $json['description'],
                 $json['body'],
@@ -72,9 +70,7 @@ class ArticlesController extends AbstractController
                 }
             }
 
-            return $this->json(
-                $article->getSingleArticle($slug)
-            );
+            return new Response($this->article->getSingleArticle($slug));
         } catch (UniqueConstraintViolationException) {
             return $this->json([
                 'errors' => [
@@ -87,15 +83,15 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_update', methods: ['PUT'])]
-    public function update(Request $request, ArticlesRepository $article): Response
+    public function update(Request $request): Response
     {
         $title = $request->request->get('title');
         $slug = strtolower(preg_replace('/ /', '-', $title));
         $description = $request->request->get('description');
         $body = $request->request->get('body');
-        $article->updateArticle($title, $description, $body);
+        $this->article->updateArticle($title, $description, $body);
 
-        return $this->json($article->getSingleArticle($slug));
+        return new Response($this->article->getSingleArticle($slug));
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_delete', methods: ['DELETE'])]
@@ -103,6 +99,6 @@ class ArticlesController extends AbstractController
     {
         $this->article->deleteArticle($slug, $tags);
 
-        return $this->json([]);
+        return new Response($this->article->getSingleArticle($slug));
     }
 }
