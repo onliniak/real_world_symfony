@@ -1,15 +1,12 @@
-Potrzebny był mi przykładowy projekt do CV. Niedokończone.
-
-Wcześniej nie używałem Symfonii, co ułatwia zrozumienie pracy mojego mózgu. 
-W większości przypadków będzie marnować czas, na próbę zrozumienia jak to 
-właściwie działa. Na przykład coś tak oczywistego, jak rejestracja zajęło mu 
-więcej niż tydzień wpatrywania się w ekran i myślenia „Mam API w 
-formacie {user, password} ale ja chcę mieć {user: {user, password}}”. 
-Kiedy każdy zajrzy na stronę 
-https://github.com/lexik/LexikJWTAuthenticationBundle/blob/2.x/Resources/doc/7-manual-token-creation.rst 
-ja zajmę się wszystkim, tylko nie tym, co trzeba.
-
 [Real World](https://github.com/gothinkster/realworld) backend demo + Symfony.
+
+Rozglądałem się za przykładowym projektem do CV. W tej chwili serwer działa 
+ale trzeba jeszcze przepisać testy z Postmana na PHP Unit, wyczyścić 
+i wprowadzić obsługę błędów. Projekt nie jest jeszcze na odpowiednim poziomie, by 
+wysłać go do Real Worlda. Zresztą mają tam chyba wersję z Symfonią.
+
+To coś miało tylko pokazać, że mam podstawy podstaw programowania obiektowego 
+w PHP i umiejętność czytania instrukcji.
 
 ## Instalacja
 ### Za pierwszym razem
