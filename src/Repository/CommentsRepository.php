@@ -56,26 +56,37 @@ class CommentsRepository extends ServiceEntityRepository
         $comment->setArticleSlug($slug);
         $comment->setAuthorId($author);
         $comment->setBody($body);
-        $comment->setCreatedAt($date);
-        $comment->setUpdatedAt($date);
+        $comment->setCreatedAt($date->format('Y-m-d\TH:i:s.v\Z'));
+        $comment->setUpdatedAt($date->format('Y-m-d\TH:i:s.v\Z'));
         $this->add($comment, true);
     }
 
     /** @return array{author_id: string, body: string, 
      * created_at: \DateTimeImmutable(), updated_at: \DateTimeImmutable(),
      * author: {username: string, bio: string, image: string}} */
-    public function ShowComments(string $slug): array
+    public function ShowComments(string $slug, bool $multiple = false)
     {
-        return $this->createQueryBuilder('c')
+        $query = $this->createQueryBuilder('c')
             ->select(['c.id', 'c.body', 'c.createdAt', 'c.updatedAt',
             'partial u.{id,username,bio,image} AS author'])
             ->join(User::class, 'u', 'WITH', 'u.username = c.author_id')
             ->where('c.article_slug = :slug')
-            ->andWhere('c.id = 1')
             ->setParameter('slug', $slug)
-            // ->setParameter('id', $id)
-            ->getQuery()
-            ->getArrayResult();
+            ->getQuery();
+
+        if ($multiple) {
+            return $query->getArrayResult();
+        } else {
+            return $query->getArrayResult()[0];
+        }
+    }
+
+    public function deleteById(string $slug, int $id)
+    {
+        $comment = $this->findOneBy(['article_slug' => $slug, 'id' => $id]);
+        if (!is_null($comment)) {
+            $this->remove($comment, true);
+        }
     }
 
     // /**

@@ -7,7 +7,6 @@ namespace App\Repository;
 use App\Entity\Followers;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Security;
@@ -24,10 +23,9 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry, ?Security $security)
+    public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
-        $this->security = $security->getUser()?->getUserIdentifier() ?? '';
     }
 
     public function add(User $entity, bool $flush = true): void
@@ -121,23 +119,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user;
     }
 
-    public function getProfile(string $user)
+    public function getProfile(string $profileUser, ?string $authUser = null)
     {
         return $this->createQueryBuilder('u')
             ->select('u.username, u.bio, u.image')
             ->addSelect('
             (
-            CASE WHEN f.user1 = :authOR AND f.user2 = u.username
+            CASE WHEN f.user1 = :authOR AND f.user2 = :user
             THEN :true
             ELSE :false
             END) AS following
             ')
             ->leftJoin(Followers::class, 'f')
             ->where('u.username = :user')
-            ->setParameter('user', $user)
+            ->setParameter('user', $profileUser)
             ->setParameter('true', "true")
             ->setParameter('false', "false")
-            ->setParameter('authOR', $this->security)
+            ->setParameter('authOR', $authUser)
             ->getQuery()
             ->getSingleResult();
     }

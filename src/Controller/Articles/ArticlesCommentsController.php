@@ -22,21 +22,19 @@ class ArticlesCommentsController extends AbstractController
 
 
         $comments->CreateComment($slug, $userInterface->getUserIdentifier(), $json['body']);
-        return $this->json($comments->ShowComments($slug));
+        return $this->json(["comment" => $comments->ShowComments($slug)]);
     }
 
     #[Route('/api/articles/{slug}/comments', name: 'app_articles_comments_get', methods: ['GET'])]
     public function show(string $slug, CommentsRepository $comments): JsonResponse
     {
-        return $this->json($comments->ShowComments($slug));
+        return $this->json(["comments" => $comments->ShowComments($slug, true)]);
     }
 
     #[Route('/api/articles/{slug}/comments/{id}', name: 'app_articles_comments_delete', methods: ['DELETE'])]
-    public function delete(string $slug, int $id): Response
+    public function delete(string $slug, int $id, CommentsRepository $commentsRepository): Response
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ArticlesCommentsController.php',
-        ]);
+        $commentsRepository->deleteById($slug, $id);
+        return $this->json(["comment" => $commentsRepository->ShowComments($slug)]);
     }
 }
