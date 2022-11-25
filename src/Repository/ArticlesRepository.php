@@ -84,7 +84,7 @@ class ArticlesRepository extends ServiceEntityRepository
     }
 
     public function listArticles(int $limit, int $offset, ?string $tag, 
-    ?string $author, ?string $favorited, ?bool $feed)
+    ?string $author, ?string $favorited, ?bool $feed = false)
     {
         $query = $this->createQueryBuilder('a')
             ->select([
