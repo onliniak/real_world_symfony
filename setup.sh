@@ -19,5 +19,7 @@ php bin/console make:migration
 # Migracja
 php bin/console doctrine:migrations:migrate
 # Start server
-symfony server:ca:install # disable on gitpod
+if ! test -f '.gitpod*'; then
+    symfony server:ca:install # disable on gitpod
+fi
 symfony server:start
