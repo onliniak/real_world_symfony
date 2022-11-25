@@ -137,7 +137,9 @@ class ArticlesRepository extends ServiceEntityRepository
                 ->getRepository('App\Entity\Tags')
                 ->getTagsFromSingleArticle($article['slug'])]));
             $articlesCount += 1;
-                $articlesArray .= ',';
+            if (sizeof($query) > 1) {
+                $articlesArray = $articlesArray .= ',';
+            }
         }
         if ($articlesCount > 1) {
             $articlesArray = rtrim($articlesArray, ',');
