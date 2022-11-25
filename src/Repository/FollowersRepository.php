@@ -41,13 +41,13 @@ class FollowersRepository extends ServiceEntityRepository
         }
     }
 
-    public function follow(string $userEmail, string $profileUsername)
+    public function follow(string $user, string $profileUsername)
     {
-        $profile = $this->findOneBy(['user1' => $userEmail, 'user2' => $profileUsername]);
+        $profile = $this->findOneBy(['user1' => $user, 'user2' => $profileUsername]);
         if (is_null($profile)) {
 
             $follower = new Followers();
-            $follower->setUser1($userEmail);
+            $follower->setUser1($user);
             $follower->setUser2($profileUsername);
 
             $this->save($follower, true);
