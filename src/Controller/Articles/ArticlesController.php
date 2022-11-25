@@ -83,13 +83,13 @@ class ArticlesController extends AbstractController
     }
 
     #[Route('/api/articles/{slug}', name: 'app_article_update', methods: ['PUT'])]
-    public function update(Request $request): Response
+    public function update(Request $request, string $slug): Response
     {
-        $title = $request->request->get('title');
-        $slug = strtolower(preg_replace('/ /', '-', $title));
-        $description = $request->request->get('description');
-        $body = $request->request->get('body');
-        $this->article->updateArticle($title, $description, $body);
+        $json = json_decode($request->getContent(), true)['article'];
+        $title = $json['title'] ?? '';
+        $description = $json['description'] ?? '';
+        $body = $json['body'] ?? '';
+        $this->article->updateArticle($slug, $title, $description, $body);
 
         return new Response($this->article->getSingleArticle($slug));
     }

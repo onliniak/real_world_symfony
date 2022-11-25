@@ -174,22 +174,27 @@ class ArticlesRepository extends ServiceEntityRepository
         $this->add($article);
     }
 
-    public function updateArticle(?string $title, ?string $description, ?string $body)
+    public function updateArticle(string $slug, string $title, string $description, string $body)
     {
         $query = $this->getEntityManager()->createQueryBuilder()
-            ->update('a');
-        if ($title) {
-            $query->set('a.title', $title)
-                ->set('a.slug', $title);
+            ->update(Articles::class, 'a');
+        if (!empty($title)) {
+            $query = $query->set('a.title', $title)
+                ->set('a.slug', ':newSlug')
+                ->setParameter('newSlug', strtolower(preg_replace('/ /', '-', $title)));
         }
-        if ($description) {
-            $query->set('a.description', $description);
+        if (!empty($description)) {
+            $query = $query->set('a.description', ':description')
+            ->setParameter('description', $description);
         }
-        if ($body) {
-            $query->set('a.body', $body);
+        if (!empty($body)) {
+            $query = $query->set('a.body', ':body')
+            ->setParameter('body', $body);
         }
+        $query = $query->where('a.slug = :slug')
+            ->setParameter('slug', $slug);
 
-        return $query->getQuery();
+        return $query->getQuery()->execute();
     }
 
     /**
